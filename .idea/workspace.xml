@@ -4,13 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Initial commit">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPCommons.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Add base logic for packets">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPLog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPMain.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,13 +47,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.VER7U7.Main" />
@@ -91,7 +90,14 @@
       <option name="project" value="LOCAL" />
       <updated>1753366933007</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Add base logic for packets">
+      <created>1753376500365</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1753376500365</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -120,6 +126,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Initial Commit for Develop branch" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial Commit for Develop branch" />
+    <MESSAGE value="Add base logic for packets" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add base logic for packets" />
   </component>
 </project>
