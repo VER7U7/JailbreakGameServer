@@ -3,6 +3,8 @@ package com.VER7U7.UnityPhysics.JUPP;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class JUPPPacket {
     private byte[] data;
@@ -18,6 +20,9 @@ public class JUPPPacket {
     public JUPPPacket(byte[] data, short packetID, int packetTransferID){
         this(data, packetID);
         this.packetTransferID = packetTransferID;
+    }
+    public JUPPPacket() {
+        this(new byte[0], (short)0, 0);
     }
 
     /* use for send packets */
@@ -36,6 +41,10 @@ public class JUPPPacket {
     public byte[] getData() {
         return data;
     }
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
 
     public short getPacketID() {
         return packetID;
@@ -51,5 +60,21 @@ public class JUPPPacket {
 
     public void setPacketTransferID(int packetTransferID) {
         this.packetTransferID = packetTransferID;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JUPPPacket that = (JUPPPacket) o;
+        return packetID == that.packetID && packetTransferID == that.packetTransferID && Arrays.equals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(packetID, packetTransferID);
+        result = 31 * result + Arrays.hashCode(data);
+        return result;
     }
 }

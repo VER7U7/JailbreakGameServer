@@ -1,38 +1,25 @@
 package com.VER7U7;
 
-import com.VER7U7.UnityPhysics.JUPP.JUPPBridge;
-import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
-import com.VER7U7.UnityPhysics.JUPP.JUPPMain;
-import com.VER7U7.UnityPhysics.JUPP.JUPPPacket;
+import com.VER7U7.Server.JailServer;
+import com.VER7U7.UnityPhysics.JUPP.*;
 
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        /*JUPPMain juppMain = new JUPPMain((short) 6767);
+    public static JUPPEngine physicsEngine;
+    public static int PLAYER_NETWORK_PORT = 5000;
+    public static int SERVICE_NETWORK_PORT = 8787;
+    public static int JUBB_NETWORK_PORT = 6767;
 
-        while(juppMain.bridgeWork) {}*/
+    public static void main(String[] args) throws InterruptedException, JUPPExceptions.VersionNotMatch {
+        //physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT));
+        //physicsEngine.Start();
 
-        JUPPBridge juppBridge = new JUPPBridge((short)6767);
-        juppBridge.startConnection();
+        JailServer jailServer = new JailServer();
+        jailServer.start();
+        jailServer.join();
 
-        while(true) {
-
-            JUPPPacket outPacket = new JUPPPacket("Hello world!".getBytes(StandardCharsets.US_ASCII), (short) 1, 1);
-            try {
-                juppBridge.sendPacket(outPacket);
-            }catch(SocketException ignore){}
-
-            JUPPPacket inPacket = juppBridge.receivePacket();
-            if (inPacket != null) {
-                if (inPacket.getPacketID() == 1) {
-                    JUPPLog.println(new String(inPacket.getData(), StandardCharsets.US_ASCII));
-                }
-            }
-
-
-            Thread.sleep(60);
-        }
+        //physicsEngine.Close();
     }
 }

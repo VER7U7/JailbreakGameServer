@@ -1,0 +1,153 @@
+package com.VER7U7.UnityPhysics.JUPP;
+
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.VER7U7.UnityPhysics.JUPP.JUPPCommons.*;
+
+public class JUPPEngine {
+
+    private short port;
+    private JUPPBridge bridge;
+    private Thread updateThread;
+    private AtomicBoolean hasRunning = new AtomicBoolean(false);
+    private Random rand;
+    //private static final Map<Integer, JUPPPacket> resultWaitingPool = new LinkedHashMap<>();
+    private static final ConcurrentHashMap<Integer, CompletableFuture<JUPPPacket>> resultWaitingPool = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Integer, JUPPPacket> incomingPacketsPool = new ConcurrentHashMap<>();
+
+    public JUPPEngine(int port) {
+        this.port = (short)port;
+    }
+
+    public void Start() throws JUPPExceptions.VersionNotMatch {
+        //Starts unity physics engine
+        rand = new Random();
+        bridge = new JUPPBridge(port, this::RestartCallback);
+        bridge.startConnection();
+
+        updateThread = new Thread(this::UpdatePacketsThread, "JUPPEngineUpdateThread");
+        updateThread.start();
+
+        while (bridge.getBridgeStatus() != BridgeStatus.BridgeConnected) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        JUPPPacket versionRequest = new JUPPPacket(JUPP_VERSION.getBytes(StandardCharsets.US_ASCII), JUPP_VERSION_CONTROL_PACKET);
+        JUPPPacket versionResult;
+        try {
+            if ((versionResult = sendWithResult(versionRequest)) != null && versionResult.packetID == JUPP_VERSION_CONTROL_PACKET)
+                if (!new String(versionResult.getData(), StandardCharsets.US_ASCII).equals(JUPP_VERSION))
+                    throw new JUPPExceptions.VersionNotMatch("Version of Unity not match with version of JUPP. Please install correct version");
+                else {
+                    JUPPLog.println("Connect successful!");
+                    hasRunning.set(true);
+                }
+            else
+                throw new JUPPExceptions.VersionNotMatch("Server received unknown result.");
+        }catch (JUPPExceptions.VersionNotMatch vnm) {
+            Close();
+            throw vnm;
+        }
+
+
+    }
+
+    public boolean hasRunning() {
+        return hasRunning.get();
+    }
+
+    public void Close() {
+        hasRunning.set(false);
+        for (Map.Entry<Integer, CompletableFuture<JUPPPacket>> entry : resultWaitingPool.entrySet()) {
+            entry.getValue().cancel(false);
+        }
+        resultWaitingPool.clear();
+        incomingPacketsPool.clear();
+        bridge.stopConnection();
+        updateThread.interrupt();
+
+        //Stop unity physics engine
+    }
+
+    private void RestartCallback() {
+        for (Map.Entry<Integer, CompletableFuture<JUPPPacket>> entry : resultWaitingPool.entrySet()) {
+            entry.getValue().cancel(false);
+        }
+        resultWaitingPool.clear();
+        incomingPacketsPool.clear();
+    }
+
+    public JUPPPacket sendWithResult(JUPPPacket outPacket) {
+        int transferID = 1;
+        while(resultWaitingPool.containsKey(transferID) || incomingPacketsPool.containsKey(transferID)) {
+            transferID = rand.nextInt(Integer.MAX_VALUE);
+        }
+        try {
+            outPacket.packetTransferID = transferID;
+            CompletableFuture<JUPPPacket> futurePacket = new CompletableFuture<>();
+            resultWaitingPool.put(transferID, futurePacket);
+            bridge.sendPacket(outPacket);
+
+            return futurePacket.get();
+        } catch(SocketException e) {
+            e.printStackTrace();
+        }catch (CancellationException ce) {
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            JUPPLog.errprintnln(Thread.currentThread().getName() + " is interrupted.");
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    public int sendNonBlock(JUPPPacket outPacket) {
+        int transferID = 1;
+        while(resultWaitingPool.containsKey(transferID) || incomingPacketsPool.containsKey(transferID)) {
+            transferID = rand.nextInt(Integer.MAX_VALUE);
+        }
+        try {
+            outPacket.packetTransferID = transferID;
+            bridge.sendPacket(outPacket);
+        } catch(SocketException e) {
+            e.printStackTrace();
+        }
+        return transferID;
+    }
+
+    private void UpdatePacketsThread() {
+        try {
+            while(!bridge.getBridgeStatus().equals(JUPPCommons.BridgeStatus.BridgeStopped)
+                    && !bridge.getBridgeStatus().equals(JUPPCommons.BridgeStatus.BridgeError)) {
+                JUPPPacket packet = bridge.receivePacket(); //wait packet
+                if (packet == null)
+                    continue;
+                int transferId = packet.packetTransferID;
+                CompletableFuture<JUPPPacket> futureResult = resultWaitingPool.remove(transferId);
+                if (futureResult != null) {
+                    futureResult.complete(packet);
+                } else {
+                    incomingPacketsPool.remove(packet.packetTransferID);
+                    incomingPacketsPool.put(packet.packetTransferID, packet);
+                }
+            }
+        }catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+}
