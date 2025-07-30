@@ -10,15 +10,9 @@ public class JailPools {
     public ConcurrentMap<Integer, JailPlayer> playersPool;
 
 
-    //Connection
-    //List<PreConnectionMessage> add after creation main server
-    public ConcurrentMap<NetworkPlayerSession, Integer> sessionToPlayerID;
-    public ConcurrentMap<NetworkPlayerSession, JailConnectionData> newConnectionData;
 
     public JailPools InitializePools() {
         playersPool = new ConcurrentHashMap<>();
-        newConnectionData = new ConcurrentHashMap<>();
-        sessionToPlayerID = new ConcurrentHashMap<>();
         return this;
     }
 

@@ -1,5 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
+import com.VER7U7.Server.Utils.LittleByteBuffer;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -20,8 +22,7 @@ public class JUPPController {
 
     public int createGameObject(String name) {
         byte[] nameData = name.getBytes(StandardCharsets.US_ASCII);
-        byte[] data = ByteBuffer.allocate(nameData.length + 2)
-                .order(ByteOrder.LITTLE_ENDIAN)
+        byte[] data = LittleByteBuffer.allocate(nameData.length + 2)
                 .putShort((short)nameData.length)
                 .put(nameData, 0, nameData.length)
                 .array();
@@ -29,7 +30,7 @@ public class JUPPController {
         JUPPPacket incomingPacket = engine.sendWithResult(packet);
         if (incomingPacket == null)
             return -1;
-        return ByteBuffer.wrap(incomingPacket.getData()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        return LittleByteBuffer.wrap(incomingPacket.getData()).getInt();
     }
 
 }

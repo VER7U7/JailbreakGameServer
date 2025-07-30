@@ -8,6 +8,7 @@ public class NetworkIncomingMessage extends NetworkMessage {
 
     public static final int NETWORK_INCOMING_DEFAULT = 0;
     public static final int NETWORK_INCOMING_NEW_PLAYER = 1;
+    public static final int NETWORK_INCOMING_DELETE_PLAYER = 2;
 
     private int playerID;
 

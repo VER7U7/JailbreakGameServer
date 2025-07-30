@@ -4,36 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Added multithread reading and writing. Edited protocol body.">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConnectionData.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConstants.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/Exceptions/IllegalPacketFormatException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkLog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkIncomingMessage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkMessage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkOutgoingMessage.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkPlayerSession.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/JailPacketService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/NewIncomingConnectionPacket.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/DeltaTime.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/LittleByteBuffer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/Utils.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPExceptions.java" afterDir="false" />
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="JUPP updated&#10;Added jail server and new Network UDP protocol">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkIncomingMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkIncomingMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPCommons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPCommons.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -130,7 +112,14 @@
       <option name="project" value="LOCAL" />
       <updated>1753448895164</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="JUPP updated&#10;Added jail server and new Network UDP protocol">
+      <created>1753641748168</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1753641748168</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -161,6 +150,7 @@
     <MESSAGE value="Initial Commit for Develop branch" />
     <MESSAGE value="Add base logic for packets" />
     <MESSAGE value="Added multithread reading and writing. Edited protocol body." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added multithread reading and writing. Edited protocol body." />
+    <MESSAGE value="JUPP updated&#10;Added jail server and new Network UDP protocol" />
+    <option name="LAST_COMMIT_MESSAGE" value="JUPP updated&#10;Added jail server and new Network UDP protocol" />
   </component>
 </project>

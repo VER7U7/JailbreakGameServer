@@ -1,5 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
+import com.VER7U7.Server.Utils.LittleByteBuffer;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
@@ -145,7 +147,7 @@ public class JUPPBridge {
                     }
 
                     dis.readFully(lengthBuffer, 0, 2);
-                    ByteBuffer bb = ByteBuffer.wrap(lengthBuffer).order(ByteOrder.LITTLE_ENDIAN);
+                    ByteBuffer bb = LittleByteBuffer.wrap(lengthBuffer).order(ByteOrder.LITTLE_ENDIAN);
                     short packetLength = bb.getShort();
 
                     if (packetLength == 0 || packetLength > JUPPCommons.JUPP_PACKET_MAX_SIZE) {
@@ -188,7 +190,7 @@ public class JUPPBridge {
                     short messageLength = (short)messageToSend.length;
 
                     dos.write(header);
-                    dos.write(ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(messageLength).array());
+                    dos.write(LittleByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(messageLength).array());
                     dos.write(messageToSend);
                     dos.flush();
 
@@ -213,8 +215,8 @@ public class JUPPBridge {
     }
 
     private void handleIncomingPacket(byte[] rawData) {
-        int packetTransferID = ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        short packetId = ByteBuffer.wrap(rawData, 4, 2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+        int packetTransferID = LittleByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        short packetId = LittleByteBuffer.wrap(rawData, 4, 2).order(ByteOrder.LITTLE_ENDIAN).getShort();
         byte[] data = new byte[rawData.length - 6];
         System.arraycopy(rawData, 6, data, 0, data.length);
         JUPPPacket packet = new JUPPPacket(data, packetId, packetTransferID);

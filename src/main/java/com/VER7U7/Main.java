@@ -17,7 +17,7 @@ public class Main {
         //physicsEngine.Start();
 
         JailServer jailServer = new JailServer();
-        jailServer.start();
+        jailServer.StartSimulation();
         jailServer.join();
 
         //physicsEngine.Close();

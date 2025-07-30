@@ -1,5 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
+import com.VER7U7.Server.Utils.LittleByteBuffer;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -30,8 +32,7 @@ public class JUPPPacket {
         if (packetTransferID <= 0 || packetID <= 0)
             return null;
 
-        return ByteBuffer.allocate(data.length + 6)
-                .order(ByteOrder.LITTLE_ENDIAN)
+        return LittleByteBuffer.allocate(data.length + 6)
                 .putInt(packetTransferID)
                 .putShort(packetID)
                 .put(data).array();

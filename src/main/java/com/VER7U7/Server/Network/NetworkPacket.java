@@ -1,5 +1,7 @@
 package com.VER7U7.Server.Network;
 
+import com.VER7U7.Server.Utils.LittleByteBuffer;
+
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -7,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.CRC32;
 
 public class NetworkPacket {
-    private short supportBytes; //will used in future
     private short packetId;
     private short playerID;
     private long timestamp;
@@ -33,7 +34,7 @@ public class NetworkPacket {
     }
 
     public byte[] getFormattedData() { //4 byte header; 2 byte length; 2 byte supp; 2 byte packetId; 8 byte timestamp; n * size bytes data; 8 bytes hashCode;
-        return ByteBuffer.allocate(4 + 2 + 2 + 2 + 8 + data.length + 8)
+        return LittleByteBuffer.allocate(4 + 2 + 2 + 2 + 8 + data.length + 8)
                 .order(ByteOrder.LITTLE_ENDIAN)
                 .put(NetworkConstants.NEJB_PROTOCOL_HEADER)
                 .putShort((short)data.length)
@@ -81,13 +82,5 @@ public class NetworkPacket {
 
     public void setData(byte[] data) {
         this.data = data;
-    }
-
-    public short getSupportBytes() {
-        return supportBytes;
-    }
-
-    public void setSupportBytes(short supportBytes) {
-        this.supportBytes = supportBytes;
     }
 }

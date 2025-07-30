@@ -5,11 +5,14 @@ import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.NetworkPacket;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
 import com.VER7U7.Server.Network.States.NetworkPlayerSession;
+import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Packets.JailPacketService;
 import com.VER7U7.Server.Utils.DeltaTime;
+import com.VER7U7.Server.Utils.LittleByteBuffer;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,8 +44,10 @@ public class JailServer extends Thread {
         serverRunning.set(true);
         try {
             deltaTime = new DeltaTime();
-            playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork();
             jailPools = new JailPools().InitializePools();
+
+            playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork();
+            playersNetwork.jailPools = jailPools;
             //physicController = new JUPPController(physicsEngine);
             jailPacketService = new JailPacketService(this, physicController, playersNetwork, jailPools);
         } catch (IOException e) {
@@ -70,9 +75,9 @@ public class JailServer extends Thread {
                 deltaTime.registerStart();
 
                 //update packets
+                processIncomingMessages();
 
-                if (ticksCount - lastPoint > 128) {
-                    //System.out.println(physicController.createGameObject(new Random().nextInt(Integer.MAX_VALUE) + ""));
+                if (ticksCount - lastPoint > 64) {
                     lastPoint = ticksCount;
                 }
 
@@ -98,8 +103,16 @@ public class JailServer extends Thread {
         NetworkIncomingMessage incomingMessage;
         while ((incomingMessage  = playersNetwork.getIncomingMessages().poll()) != null) {
             if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
-
+                jailPacketService.callToPacketFactory(incomingMessage.getPacket().getPacketId(), incomingMessage.getPlayerID(), incomingMessage.getPacket());
                 continue;
+            }
+
+            if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER) {
+                jailPools.playersPool.put(incomingMessage.getPlayerID(), new JailPlayer());
+            }
+
+            if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER) {
+                jailPools.playersPool.remove(incomingMessage.getPlayerID());
             }
 
         }
