@@ -2,22 +2,77 @@ package com.VER7U7.Server.Packets;
 
 public class PacketConstants {
 
-    //INCOMING
-    public static final short INCOMING_NEW_CONNECTION_PACKET = 1;
-    public static final short INCOMING_CONNECTION_INVITATION_CODE_PACKET = 2;
 
-    public static final short INCOMING_ASK = 7;
+    public enum IncomingPacketType {
+        NewConnection(1),
+        ConnectionInvitationCode(2),
 
-    //OUTGOING
-    public static final short OUTGOING_CONNECTION_SEND_INVITATION_CODE_PACKET = 1;
-    public static final short OUTGOING_CONNECTION_SUCCESS = 2;
-    public static final short OUTGOING_ASK = 7;
+        Ask(7),
+
+        Disconnect(255);
+
+        private final int value;
+        IncomingPacketType(int value) {
+            this.value = value;
+        }
+        public int getID() {
+            return value;
+        }
+        public static IncomingPacketType fromID(int value) {
+            for (IncomingPacketType incoming : IncomingPacketType.values()) {
+                if (incoming.value == value)
+                    return incoming;
+            }
+            throw new IllegalArgumentException("No enum constant with value " + value);
+        }
+    }
 
 
-    //DISCONNECT
-    public static final short DISCONNECT_PACKET = 255;
-    public static final String DISCONNECT_CAUSE_VERSION_NOT_MATCH = "VERSION_NOT_MATCH";
-    public static final String DISCONNECT_CAUSE_TRY_AGAIN = "TRY_AGAIN";
-    public static final String DISCONNECT_CAUSE_WRONG_ORDER = "DISCONNECT_CAUSE_WRONG_ORDER";
-    public static final String DISCONNECT_CAUSE_WRONG_CODE = "DISCONNECT_CAUSE_WRONG_CODE";
+    public enum OutgoingPacketType {
+        ConnectionSendInvitationCode(1),
+        ConnectionSuccess(2),
+
+        Ask(7),
+        PlayerMove(10),
+        ChatMessage(11),
+
+        Disconnect(255);
+
+        private final int value;
+        OutgoingPacketType(int value) {
+            this.value = value;
+        }
+        public int getID() {
+            return value;
+        }
+        public static OutgoingPacketType fromID(int value) {
+            for (OutgoingPacketType outgoing : OutgoingPacketType.values()) {
+                if (outgoing.value == value)
+                    return outgoing;
+            }
+            throw new IllegalArgumentException("No enum constant with value " + value);
+        }
+    }
+
+    public enum DisconnectReason {
+        VersionNotMatch(1),
+        TryAgain(2),
+        WrongOrder(3),
+        WrongCode(4);
+
+        private final int value;
+        DisconnectReason(int value) {
+            this.value = value;
+        }
+        public int getID() {
+            return value;
+        }
+        public static DisconnectReason fromID(int value) {
+            for (DisconnectReason reason : DisconnectReason.values()) {
+                if (reason.value == value)
+                    return reason;
+            }
+            throw new IllegalArgumentException("No enum constant with value " + value);
+        }
+    }
 }

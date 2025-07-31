@@ -1,20 +1,13 @@
 package com.VER7U7.Server;
 
-import com.VER7U7.Main;
 import com.VER7U7.Server.Network.NetworkEngine;
-import com.VER7U7.Server.Network.NetworkPacket;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
-import com.VER7U7.Server.Network.States.NetworkPlayerSession;
 import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Packets.JailPacketService;
 import com.VER7U7.Server.Utils.DeltaTime;
-import com.VER7U7.Server.Utils.LittleByteBuffer;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.VER7U7.Main.*;
@@ -103,7 +96,8 @@ public class JailServer extends Thread {
         NetworkIncomingMessage incomingMessage;
         while ((incomingMessage  = playersNetwork.getIncomingMessages().poll()) != null) {
             if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
-                jailPacketService.callToPacketFactory(incomingMessage.getPacket().getPacketId(), incomingMessage.getPlayerID(), incomingMessage.getPacket());
+                IncomingPacketType packetType = IncomingPacketType.fromID(incomingMessage.getPacket().getPacketId());
+                jailPacketService.callToPacketFactory(packetType, incomingMessage.getPlayerID(), incomingMessage.getPacket());
                 continue;
             }
 

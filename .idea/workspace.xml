@@ -4,19 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="JUPP updated&#10;Added jail server and new Network UDP protocol">
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Synced jail server with unity client. Added processing RTT by Network Engine. Fixed problem with delay by send packets (cause: selector.select(10)). Now when player connected to server, jail server creating new instance in playersPool (JailPools).">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/IncomingPacketData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/OutgoingPacketData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketsFactory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkIncomingMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkIncomingMessage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/JailPacketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/JailPacketService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/NewIncomingConnectionPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/NewIncomingConnectionPacket.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/PacketFunction.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,7 +118,14 @@
       <option name="project" value="LOCAL" />
       <updated>1753641748168</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Synced jail server with unity client. Added processing RTT by Network Engine. Fixed problem with delay by send packets (cause: selector.select(10)). Now when player connected to server, jail server creating new instance in playersPool (JailPools).">
+      <created>1753895123498</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1753895123498</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -151,6 +157,7 @@
     <MESSAGE value="Add base logic for packets" />
     <MESSAGE value="Added multithread reading and writing. Edited protocol body." />
     <MESSAGE value="JUPP updated&#10;Added jail server and new Network UDP protocol" />
-    <option name="LAST_COMMIT_MESSAGE" value="JUPP updated&#10;Added jail server and new Network UDP protocol" />
+    <MESSAGE value="Synced jail server with unity client. Added processing RTT by Network Engine. Fixed problem with delay by send packets (cause: selector.select(10)). Now when player connected to server, jail server creating new instance in playersPool (JailPools)." />
+    <option name="LAST_COMMIT_MESSAGE" value="Synced jail server with unity client. Added processing RTT by Network Engine. Fixed problem with delay by send packets (cause: selector.select(10)). Now when player connected to server, jail server creating new instance in playersPool (JailPools)." />
   </component>
 </project>

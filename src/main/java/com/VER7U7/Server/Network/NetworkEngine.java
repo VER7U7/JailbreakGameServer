@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.VER7U7.Server.JailConstants.*;
 import static com.VER7U7.Server.Network.NetworkConstants.*;
 import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Packets.OutgoingPacketData.*;
 
 public class NetworkEngine extends Thread {
     private final int port;
@@ -98,13 +99,6 @@ public class NetworkEngine extends Thread {
         selector.wakeup();
     }
 
-    /*public void addSession(NetworkPlayerSession session) {
-        playerSessions.put(session.getClientAddress(), session);
-    }
-    public void deleteSession(NetworkPlayerSession session) {
-        playerSessions.remove(session.getClientAddress());
-    }*/ //replace to ID
-
     @Override
     public void run() {
         ByteBuffer receiveBuffer = LittleByteBuffer.allocate(NEJB_PROTOCOL_MAX_LENGTH);
@@ -158,7 +152,8 @@ public class NetworkEngine extends Thread {
                 NetworkPacket packet;
                 try {
                     packet = parsePacket(buffer);
-                    updatePing(packet, session);
+                    if (updatePing(packet, session))
+                        return;
                 }catch (IllegalPacketFormatException e) {
                     return;
                 }
@@ -170,54 +165,58 @@ public class NetworkEngine extends Thread {
         }
     }
 
-    public void updatePing(NetworkPacket packet, NetworkPlayerSession session) {
-        if (packet.getPacketId() == INCOMING_ASK) {
+    /**
+    * RTT calculates in 3 steps. First packet client sent to server with 'step == 0'
+     * server save askSendTime and send second packet to client with 'step == 1', client calculate
+     * RTT and send last packet with 'step == 2' (its last iteration) and server calculate RTT.
+     * @return return true if this packet is ask {@code ID 7}
+    * */
+    public boolean updatePing(NetworkPacket packet, NetworkPlayerSession session) {
+        if (packet.getPacketId() == IncomingPacketType.Ask.getID()) {
             JailPlayer player = jailPools.playersPool.get(session.getPlayerID());
             if (packet.getData()[0] == 0) {
-                addPacketToOutgoing(
-                        new NetworkPacket(LittleByteBuffer
-                                .allocate(9)
-                                .put((byte)1)
-                                .putLong(System.currentTimeMillis())
-                                .array(),
-                                OUTGOING_ASK), 0, session.getPlayerID());
+                OutgoingAsk outgoingAsk = new OutgoingAsk((byte) 1, System.currentTimeMillis());
+                addPacketToOutgoing(outgoingAsk.Serialize(), 0, session.getPlayerID());
                 player.askSendTime = System.currentTimeMillis();
             } else if (packet.getData()[0] == 2) {
                 long deltaTime = System.currentTimeMillis() - player.askSendTime;
                 player.RTT = (int)deltaTime;
                 System.out.println(deltaTime);
             }
+            return true;
         }
+        return false;
     }
 
     public void handleHandshake(SocketAddress socketAddress, ByteBuffer buffer) throws IOException {
         NetworkPacket packet;
         try {
             packet = parsePacket(buffer);
+
         }catch (IllegalPacketFormatException e) {
             return;
         }
 
         if (!nonAuthedConnections.containsKey(socketAddress)) {
-            if (packet.getPacketId() == INCOMING_NEW_CONNECTION_PACKET) {
+            if (packet.getPacketId() == IncomingPacketType.NewConnection.getID()) {
                 int clientVersion = LittleByteBuffer.wrap(packet.getData()).getInt();
 
                 if (clientVersion == SERVER_VERSION) {
                     nonAuthedConnections.put(socketAddress, new ConnectionData().setState(ConnectionData.ConnectionStateMachine.VERSION_CHECKED));
                     nonAuthedConnections.get(socketAddress).updateTimestamp();
 
-                    NetworkPacket outPacket = new NetworkPacket(LittleByteBuffer.allocate(4).putInt(SERVER_VERSION).array(), OUTGOING_CONNECTION_SEND_INVITATION_CODE_PACKET, 0);
-                    channel.send(LittleByteBuffer.wrap(outPacket.getFormattedData()), socketAddress);
+                    OutgoingConnectionSendInvitationCode outgoing = new OutgoingConnectionSendInvitationCode(SERVER_VERSION);
+                    channel.send(outgoing.Serialize().getFormattedDataBuffer(), socketAddress);
                 } else {
-                    NetworkPacket outPacket = new NetworkPacket(DISCONNECT_CAUSE_VERSION_NOT_MATCH.getBytes(), DISCONNECT_PACKET, 0);
-                    channel.send(LittleByteBuffer.wrap(outPacket.getFormattedData()), socketAddress);
+                    OutgoingDisconnect outgoing = new OutgoingDisconnect(DisconnectReason.VersionNotMatch);
+                    channel.send(outgoing.Serialize().getFormattedDataBuffer(), socketAddress);
                 }
             } else {
-                NetworkPacket outPacket = new NetworkPacket(DISCONNECT_CAUSE_WRONG_ORDER.getBytes(), DISCONNECT_PACKET, 0);
-                channel.send(LittleByteBuffer.wrap(outPacket.getFormattedData()), socketAddress);
+                OutgoingDisconnect outgoing = new OutgoingDisconnect(DisconnectReason.WrongOrder);
+                channel.send(outgoing.Serialize().getFormattedDataBuffer(), socketAddress);
             }
         } else {
-            if (packet.getPacketId() == INCOMING_CONNECTION_INVITATION_CODE_PACKET &&
+            if (packet.getPacketId() == IncomingPacketType.ConnectionInvitationCode.getID() &&
                     nonAuthedConnections.get(socketAddress).getState() == ConnectionData.ConnectionStateMachine.VERSION_CHECKED) {
 
                 String invitationCode = new String(packet.getData(), StandardCharsets.UTF_8);
@@ -234,12 +233,12 @@ public class NetworkEngine extends Thread {
 
                     nonAuthedConnections.remove(socketAddress);
 
-                    NetworkPacket outPacket = new NetworkPacket("SUCCESS".getBytes(StandardCharsets.US_ASCII), OUTGOING_CONNECTION_SUCCESS, newPlayerId);
-                    channel.send(LittleByteBuffer.wrap(outPacket.getFormattedData()), socketAddress);
+                    OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess();
+                    channel.send(outgoingSuccess.Serialize().setPlayerID(newPlayerId).getFormattedDataBuffer(), socketAddress);
                     NetworkLog.println("Added new player");
                 } else {
-                    NetworkPacket outPacket = new NetworkPacket(DISCONNECT_CAUSE_WRONG_CODE.getBytes(), DISCONNECT_PACKET, 0);
-                    channel.send(LittleByteBuffer.wrap(outPacket.getFormattedData()), socketAddress);
+                    OutgoingDisconnect outgoing = new OutgoingDisconnect(DisconnectReason.WrongCode);
+                    channel.send(outgoing.Serialize().getFormattedDataBuffer(), socketAddress);
                 }
             }
         }

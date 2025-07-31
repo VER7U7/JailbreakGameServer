@@ -4,7 +4,7 @@ import com.VER7U7.Server.JailPools;
 import com.VER7U7.Server.JailServer;
 import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.NetworkPacket;
-import com.VER7U7.Server.Network.States.NetworkPlayerSession;
+import com.VER7U7.Server.PacketFunctions.PacketFunction;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
 import java.io.File;
@@ -16,42 +16,44 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static com.VER7U7.Server.Packets.PacketConstants.*;
+
 public class JailPacketService {
 
-    public Map<Integer, PacketFactory> packetFactoryPool;
+    public Map<IncomingPacketType, PacketFunction> packetFactoryPool;
 
     public JailPacketService(JailServer jailServer, JUPPController physicsController, NetworkEngine networkEngine, JailPools jailPools) {
-        List<Class<?>> classes = findAllClassesImplementingInterface("com.VER7U7.Server.Packets", PacketFactory.class);
+        List<Class<?>> classes = findAllClassesImplementingInterface("com.VER7U7.Server.PacketFunctions", PacketFunction.class);
 
         if (classes == null)
             throw new RuntimeException("Classes with interface PacketFactory not found.");
 
-        List<PacketFactory> packets = new ArrayList<>();
+        List<PacketFunction> packets = new ArrayList<>();
         for (Class<?> clazzFor : classes) {
             try {
-                Class<? extends PacketFactory> clazz = clazzFor.asSubclass(PacketFactory.class);
-                PacketFactory packetFactory = clazz.getDeclaredConstructor().newInstance();
-                packets.add(packetFactory);
+                Class<? extends PacketFunction> clazz = clazzFor.asSubclass(PacketFunction.class);
+                PacketFunction packetFunction = clazz.getDeclaredConstructor().newInstance();
+                packets.add(packetFunction);
             } catch(Exception e) { e.printStackTrace(); }
         }
 
         packetFactoryPool = new LinkedHashMap<>();
-        for (PacketFactory packetFactory : packets) {
-            int packetID = packetFactory.initialize(jailServer, physicsController, networkEngine, jailPools);
+        for (PacketFunction packetFunction : packets) {
+            IncomingPacketType packetType = packetFunction.initialize(jailServer, physicsController, networkEngine, jailPools);
 
-            if (packetID > 0)
-                packetFactoryPool.put(packetID, packetFactory);
+            if (packetType.getID() > 0)
+                packetFactoryPool.put(packetType, packetFunction);
         }
     }
 
-    public boolean callToPacketFactory(int packetID, int playerID, NetworkPacket networkPacket) {
-        PacketFactory packetFactory = packetFactoryPool.get(packetID);
+    public boolean callToPacketFactory(IncomingPacketType packetType, int playerID, NetworkPacket networkPacket) {
+        PacketFunction packetFunction = packetFactoryPool.get(packetType);
 
-        if (packetFactory == null)
+        if (packetFunction == null)
             return false;
 
         try {
-            packetFactory.process(playerID, networkPacket);
+            packetFunction.process(playerID, networkPacket);
         } catch(Exception e) { e.printStackTrace();}
         return true;
     }
