@@ -4,6 +4,7 @@ import com.VER7U7.Server.Network.NetworkPacket;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static com.VER7U7.Server.Packets.PacketConstants.*;
 
@@ -38,20 +39,28 @@ public abstract class OutgoingPacketData {
 
     public static class OutgoingConnectionSuccess extends OutgoingPacketData {
 
+        public short playerId;
         public String successText = "SUCCESS";
 
         public OutgoingConnectionSuccess() {
             super(OutgoingPacketType.ConnectionSuccess);
         }
 
-        public OutgoingConnectionSuccess(String successText) {
+        public OutgoingConnectionSuccess(short playerId, String successText) {
             this();
+            this.playerId = playerId;
             this.successText = successText;
+        }
+
+        public OutgoingConnectionSuccess(int playerId) {
+            this();
+            this.playerId = (short) playerId;
         }
 
         @Override
         public NetworkPacket Serialize() {
-            return new NetworkPacket(successText.getBytes(), type.getID());
+            ByteBuffer buffer = LittleByteBuffer.allocate(2 + successText.length()).putShort(playerId).put(successText.getBytes(StandardCharsets.US_ASCII));
+            return new NetworkPacket(buffer.array(), type.getID());
         }
     }
 

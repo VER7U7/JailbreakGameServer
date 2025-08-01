@@ -4,19 +4,26 @@ public class PacketConstants {
 
 
     public enum IncomingPacketType {
-        NewConnection(1),
-        ConnectionInvitationCode(2),
+        NewConnection(1, true),
+        ConnectionInvitationCode(2, true),
 
-        Ask(7),
+        Ask(7, false), //Ping
+        ConfirmASK(8, false),
 
-        Disconnect(255);
+        Disconnect(255, false);
 
         private final int value;
-        IncomingPacketType(int value) {
+        private final boolean needConfirmation;
+
+        IncomingPacketType(int value, boolean needConfirm) {
             this.value = value;
+            this.needConfirmation = needConfirm;
         }
         public int getID() {
             return value;
+        }
+        public boolean hasNeedConfirm() {
+            return needConfirmation;
         }
         public static IncomingPacketType fromID(int value) {
             for (IncomingPacketType incoming : IncomingPacketType.values()) {
@@ -29,21 +36,28 @@ public class PacketConstants {
 
 
     public enum OutgoingPacketType {
-        ConnectionSendInvitationCode(1),
-        ConnectionSuccess(2),
+        ConnectionSendInvitationCode(1, true),
+        ConnectionSuccess(2, true),
 
-        Ask(7),
-        PlayerMove(10),
-        ChatMessage(11),
+        Ask(7, false), //Ping
+        ConfirmAsk(8, false),
 
-        Disconnect(255);
+        PlayerMove(10, false),
+        ChatMessage(11, true),
+
+        Disconnect(255, false);
 
         private final int value;
-        OutgoingPacketType(int value) {
+        private final boolean needConfirmation;
+        OutgoingPacketType(int value, boolean needConfirm) {
             this.value = value;
+            this.needConfirmation = needConfirm;
         }
         public int getID() {
             return value;
+        }
+        public boolean hasNeedConfirm() {
+            return needConfirmation;
         }
         public static OutgoingPacketType fromID(int value) {
             for (OutgoingPacketType outgoing : OutgoingPacketType.values()) {

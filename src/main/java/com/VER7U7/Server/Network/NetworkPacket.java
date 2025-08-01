@@ -12,39 +12,39 @@ import java.util.zip.CRC32;
 
 public class NetworkPacket {
     private short packetId;
-    private short playerID;
+    private int packetTransferID;
     private long timestamp;
     private long confirmHashCode;
     private byte[] data;
 
-    public NetworkPacket(byte[] data, int packetId, short playerID, long timestamp, long confirmHashCode) {
+    public NetworkPacket(byte[] data, int packetId, int packetTransferID, long timestamp, long confirmHashCode) {
         this.data = data;
-        this.playerID = playerID;
+        this.packetTransferID = packetTransferID;
         this.packetId = (short)packetId;
         this.timestamp = timestamp;
         this.confirmHashCode = confirmHashCode;
     }
 
-    public NetworkPacket(byte[] data, int packetId, int playerId) {
-        this(data, packetId, (short)playerId, System.currentTimeMillis(), 0);
+    public NetworkPacket(byte[] data, int packetId, int packetTransferID) {
+        this(data, packetId, packetTransferID, System.currentTimeMillis(), 0);
         confirmHashCode = getCrcHash(data);
     }
 
     public NetworkPacket(byte[] data, int packetId) {
-        this(data, packetId, (short)0, System.currentTimeMillis(), 0);
+        this(data, packetId, 0, System.currentTimeMillis(), 0);
         confirmHashCode = getCrcHash(data);
     }
 
-    public ByteBuffer getFormattedDataBuffer() { //4 byte header; 2 byte length; 2 byte supp; 2 byte packetId; 8 byte timestamp; n * size bytes data; 8 bytes hashCode;
-        return LittleByteBuffer.allocate(4 + 2 + 2 + 2 + 8 + data.length + 8)
+    public ByteBuffer getFormattedDataBuffer() { //4 byte header; 2 byte length; 2 byte packetId; 4 packetTransferId, 8 byte timestamp; n * size bytes data; 8 bytes hashCode;
+        return LittleByteBuffer.allocate(4 + 2 + 2 + 4 + 8 + data.length + 8)
                 .order(ByteOrder.LITTLE_ENDIAN)
                 .put(NetworkConstants.NEJB_PROTOCOL_HEADER)
                 .putShort((short)data.length)
                 .putShort(packetId)
-                .putShort(playerID)
+                .putInt(packetTransferID)
                 .putLong(timestamp)
                 .put(data)
-                .putLong(getCrcHash(data));
+                .putLong(getCrcHash(data)).flip();
     }
 
     public byte[] getFormattedData() {
@@ -93,13 +93,12 @@ public class NetworkPacket {
         return this;
     }
 
-    public short getPlayerID() {
-        return playerID;
+    public int getPacketTransferID() {
+        return packetTransferID;
     }
 
-    public NetworkPacket setPlayerID(int playerID) {
-        this.playerID = (short) playerID;
-        return this;
+    public void setPacketTransferID(int packetTransferID) {
+        this.packetTransferID = packetTransferID;
     }
 
     @Override
@@ -107,12 +106,12 @@ public class NetworkPacket {
         if (this == o) return true;
         if (!(o instanceof NetworkPacket)) return false;
         NetworkPacket that = (NetworkPacket) o;
-        return packetId == that.packetId && playerID == that.playerID && timestamp == that.timestamp && confirmHashCode == that.confirmHashCode && Arrays.equals(data, that.data);
+        return packetId == that.packetId && packetTransferID == that.packetTransferID && timestamp == that.timestamp && confirmHashCode == that.confirmHashCode && Arrays.equals(data, that.data);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(packetId, playerID, timestamp, confirmHashCode);
+        int result = Objects.hash(packetId, packetTransferID, timestamp, confirmHashCode);
         result = 31 * result + Arrays.hashCode(data);
         return result;
     }
@@ -121,7 +120,7 @@ public class NetworkPacket {
     public String toString() {
         return "NetworkPacket{" +
                 "packetId=" + packetId +
-                ", playerID=" + playerID +
+                ", packetTransferID=" + packetTransferID +
                 ", timestamp=" + timestamp +
                 ", confirmHashCode=" + confirmHashCode +
                 ", data=" + Arrays.toString(data) +

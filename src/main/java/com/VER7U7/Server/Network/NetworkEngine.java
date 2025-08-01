@@ -5,6 +5,7 @@ import com.VER7U7.Server.Network.Exceptions.IllegalPacketFormatException;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
 import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
 import com.VER7U7.Server.Network.States.NetworkPlayerSession;
+import com.VER7U7.Server.Network.States.NetworkWaitConfirmMessage;
 import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
 
@@ -32,13 +33,14 @@ public class NetworkEngine extends Thread {
     private final int port;
     private Selector selector;
     private DatagramChannel channel;
-
+    private final Random random = new Random();
 
     private final ConcurrentMap<SocketAddress, NetworkPlayerSession> addressToSession;
     private final ConcurrentMap<Integer, NetworkPlayerSession> playerIdToSession;
     private final ConcurrentMap<SocketAddress, ConnectionData> nonAuthedConnections;
     private final ConcurrentLinkedQueue<NetworkIncomingMessage> incomingQueue;
     private final ConcurrentLinkedQueue<NetworkOutgoingMessage> outgoingQueue;
+    private final ConcurrentMap<Integer, NetworkWaitConfirmMessage> waitConfirmationPackets;
 
     public AtomicBoolean networkReady = new AtomicBoolean(false);
     private Runnable callbackSessionTimeout;
@@ -51,6 +53,7 @@ public class NetworkEngine extends Thread {
         this.addressToSession = new ConcurrentHashMap<>();
         this.playerIdToSession = new ConcurrentHashMap<>();
         this.nonAuthedConnections = new ConcurrentHashMap<>();
+        this.waitConfirmationPackets = new ConcurrentHashMap<>();
 
         this.incomingQueue = new ConcurrentLinkedQueue<>();
         this.outgoingQueue = new ConcurrentLinkedQueue<>();
@@ -99,6 +102,8 @@ public class NetworkEngine extends Thread {
         selector.wakeup();
     }
 
+    //public void addPacketToOutgoing Network
+
     @Override
     public void run() {
         ByteBuffer receiveBuffer = LittleByteBuffer.allocate(NEJB_PROTOCOL_MAX_LENGTH);
@@ -122,6 +127,7 @@ public class NetworkEngine extends Thread {
                 }
 
                 checkSessionTimeouts();
+                processWaitConfirmationPackets();
             }catch (IOException e) {
                 e.printStackTrace();
             }
@@ -142,16 +148,19 @@ public class NetworkEngine extends Thread {
                 NetworkPlayerSession session = addressToSession.get(senderAddress);
                 int networkIncomingType = NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT;
 
-                if (session == null) {
-                    handleHandshake(senderAddress, buffer);
-                    return;
-                }
-
-                session.updateLastSeenTimestamp();
-
                 NetworkPacket packet;
                 try {
                     packet = parsePacket(buffer);
+
+                    if (updateReceiptConfirmation(packet, senderAddress))
+                        return;
+
+                    if (session == null) {
+                        handleHandshake(senderAddress, packet);
+                        return;
+                    }
+                    session.updateLastSeenTimestamp();
+
                     if (updatePing(packet, session))
                         return;
                 }catch (IllegalPacketFormatException e) {
@@ -188,19 +197,34 @@ public class NetworkEngine extends Thread {
         return false;
     }
 
-    public void handleHandshake(SocketAddress socketAddress, ByteBuffer buffer) throws IOException {
-        NetworkPacket packet;
-        try {
-            packet = parsePacket(buffer);
+    public boolean updateReceiptConfirmation(NetworkPacket packet, SocketAddress address) {
+        if (packet.getPacketId() == IncomingPacketType.ConfirmASK.getID()) {
+            int countTransfers = packet.getData().length % 4;
+            ByteBuffer buffer = LittleByteBuffer.wrap(packet.getData());
 
-        }catch (IllegalPacketFormatException e) {
-            return;
+            for (int i = 0; i < countTransfers; i++) {
+                int transferID = buffer.getInt();
+
+                NetworkWaitConfirmMessage waitMessage = waitConfirmationPackets.get(transferID);
+                if (waitMessage == null)
+                    continue;
+
+                if (waitMessage.getClientAddress() != address)
+                    continue;
+
+                waitConfirmationPackets.remove(transferID);
+            }
+
+            return true;
         }
+        return false;
+    }
+
+    public void handleHandshake(SocketAddress socketAddress, NetworkPacket packet) throws IOException {
 
         if (!nonAuthedConnections.containsKey(socketAddress)) {
             if (packet.getPacketId() == IncomingPacketType.NewConnection.getID()) {
                 int clientVersion = LittleByteBuffer.wrap(packet.getData()).getInt();
-
                 if (clientVersion == SERVER_VERSION) {
                     nonAuthedConnections.put(socketAddress, new ConnectionData().setState(ConnectionData.ConnectionStateMachine.VERSION_CHECKED));
                     nonAuthedConnections.get(socketAddress).updateTimestamp();
@@ -233,8 +257,8 @@ public class NetworkEngine extends Thread {
 
                     nonAuthedConnections.remove(socketAddress);
 
-                    OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess();
-                    channel.send(outgoingSuccess.Serialize().setPlayerID(newPlayerId).getFormattedDataBuffer(), socketAddress);
+                    OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess(newPlayerId);
+                    channel.send(outgoingSuccess.Serialize().getFormattedDataBuffer(), socketAddress);
                     NetworkLog.println("Added new player");
                 } else {
                     OutgoingDisconnect outgoing = new OutgoingDisconnect(DisconnectReason.WrongCode);
@@ -263,7 +287,7 @@ public class NetworkEngine extends Thread {
             int f = b & 0xff;
             System.out.print(f + " ");
         }
-        System.out.println();*///debug
+        System.out.println();*/
 
         byte[] headerBuffer = new byte[4];
         short dataLength = buffer.get(headerBuffer, 0, 4).getShort();
@@ -271,13 +295,13 @@ public class NetworkEngine extends Thread {
             throw new IllegalPacketFormatException("Protocol header does not match.");
 
         short packetID = buffer.getShort();
-        short playerID = buffer.getShort(); //for not logined users is 0
+        int packetTransferId = buffer.getInt();
         long timestamp = buffer.getLong();
         byte[] data = new byte[dataLength];
         buffer.get(data, 0, dataLength);
         long commitHash = buffer.getLong();
 
-        NetworkPacket packet = new NetworkPacket(data, packetID, playerID, timestamp, commitHash);
+        NetworkPacket packet = new NetworkPacket(data, packetID, packetTransferId, timestamp, commitHash);
         if (packet.getConfirmHashCode() != packet.getCrcHash(data))
             throw new IllegalPacketFormatException("CRC hash code was corrupted.");
 
@@ -290,9 +314,19 @@ public class NetworkEngine extends Thread {
 
             NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
             if (session != null) {
-                ByteBuffer sendBuffer = LittleByteBuffer.wrap(outgoingMessage.getPacket().getFormattedData());
                 try {
-                    channel.send(sendBuffer, session.getClientAddress());
+
+                    OutgoingPacketType checkConfirm = OutgoingPacketType.fromID(outgoingMessage.getPacket().getPacketId());
+                    if (checkConfirm.hasNeedConfirm()) {
+                        NetworkPacket packet = outgoingMessage.getPacket();
+                        int transferID = 1;
+                        while(waitConfirmationPackets.containsKey(transferID)) {
+                            transferID = random.nextInt(Integer.MAX_VALUE);
+                        }
+                        packet.setPacketTransferID(transferID);
+                        waitConfirmationPackets.put(transferID, new NetworkWaitConfirmMessage(packet, session.getClientAddress(), System.currentTimeMillis()));
+                    }
+                    channel.send(outgoingMessage.getPacket().getFormattedDataBuffer(), session.getClientAddress());
                 }catch(IOException e) {
                     e.printStackTrace();
                 }
@@ -300,6 +334,55 @@ public class NetworkEngine extends Thread {
                 NetworkLog.errprintnln("Unknown session, may be client break connection.");
             }
         }
+    }
+
+    private void processWaitConfirmationPackets() {
+
+        Iterator<Map.Entry<Integer, NetworkWaitConfirmMessage>> iterator = waitConfirmationPackets.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, NetworkWaitConfirmMessage> entry = iterator.next();
+            long currentTime = System.currentTimeMillis();
+            var waitMessage = entry.getValue();
+
+            try {
+                if (waitMessage.isNotAuth()) {
+                    if (!nonAuthedConnections.containsKey(waitMessage.getClientAddress()))
+                        iterator.remove();
+
+                    if ((currentTime - waitMessage.getLastTryTimestamp()) > NEJB_CONFIRM_NOT_LOGIN_MS) {
+                        waitMessage.setLastTryTimestamp(currentTime);
+                        channel.send(waitMessage.getPacket().getFormattedDataBuffer(), waitMessage.getClientAddress());
+                    }
+                } else {
+                    int playerId = addressToPlayerID(waitMessage.getClientAddress());
+                    if (playerId == -1)
+                        iterator.remove();
+
+                    int RTT = jailPools.playersPool.get(playerId).RTT + 8;
+                    if (RTT > NEJB_PLAYER_TIMEOUT_MS)
+                        RTT = (int)NEJB_CONFIRM_NOT_LOGIN_MS;
+
+                    int confirmDelay = RTT * 2;
+
+                    if ((currentTime - waitMessage.getLastTryTimestamp()) > confirmDelay) {
+                        waitMessage.setLastTryTimestamp(currentTime);
+                        channel.send(waitMessage.getPacket().getFormattedDataBuffer(), waitMessage.getClientAddress());
+                    }
+                }
+            }catch(IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    private int addressToPlayerID(SocketAddress address) {
+        for (Map.Entry<Integer, NetworkPlayerSession> entry : playerIdToSession.entrySet()) {
+            if (entry.getValue().getClientAddress() == address)
+                return entry.getKey();
+        }
+        return -1;
     }
 
     private void checkSessionTimeouts() {

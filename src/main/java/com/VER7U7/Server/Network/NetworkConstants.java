@@ -8,6 +8,7 @@ public class NetworkConstants {
     public static final String NEJB_PROTOCOL_VERSION = "0.0.1";
     public static final int NEJB_PROTOCOL_MAX_LENGTH = 1024;
     public static final long NEJB_PLAYER_TIMEOUT_MS = 10_000;
+    public static final long NEJB_CONFIRM_NOT_LOGIN_MS = 1_000;
 
 
 }
