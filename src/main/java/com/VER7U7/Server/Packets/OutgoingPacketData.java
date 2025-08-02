@@ -64,15 +64,15 @@ public abstract class OutgoingPacketData {
         }
     }
 
-    public static class OutgoingAsk extends OutgoingPacketData {
+    public static class OutgoingPing extends OutgoingPacketData {
         public byte step;
         public long timestamp;
 
-        public OutgoingAsk() {
-            super(OutgoingPacketType.Ask);
+        public OutgoingPing() {
+            super(OutgoingPacketType.Ping);
         }
 
-        public OutgoingAsk(byte step, long timestamp) {
+        public OutgoingPing(byte step, long timestamp) {
             this();
             this.step = step;
             this.timestamp = timestamp;
@@ -101,6 +101,29 @@ public abstract class OutgoingPacketData {
         @Override
         public NetworkPacket Serialize() {
             return new NetworkPacket(LittleByteBuffer.allocate(1).put((byte)disconnectReason.getID()).array(), type.getID());
+        }
+    }
+
+    public static class OutgoingConfirmAsk extends OutgoingPacketData {
+
+        public int[] transfers;
+
+        public OutgoingConfirmAsk() {
+            super(OutgoingPacketType.ConfirmAsk);
+        }
+
+        public OutgoingConfirmAsk(int[] transfers) {
+            this();
+            this.transfers = transfers;
+        }
+
+        @Override
+        public NetworkPacket Serialize() {
+            ByteBuffer buffer = LittleByteBuffer.allocate(transfers.length * 4);
+            for (int transfer : transfers) {
+                buffer.putInt(transfer);
+            }
+            return new NetworkPacket(buffer.array(), type.getID());
         }
     }
 

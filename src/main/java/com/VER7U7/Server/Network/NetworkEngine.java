@@ -2,11 +2,9 @@ package com.VER7U7.Server.Network;
 
 import com.VER7U7.Server.JailPools;
 import com.VER7U7.Server.Network.Exceptions.IllegalPacketFormatException;
-import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
-import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
-import com.VER7U7.Server.Network.States.NetworkPlayerSession;
-import com.VER7U7.Server.Network.States.NetworkWaitConfirmMessage;
+import com.VER7U7.Server.Network.States.*;
 import com.VER7U7.Server.Objects.JailPlayer;
+import com.VER7U7.Server.Packets.IncomingPacketData;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
 
 import java.io.IOException;
@@ -28,6 +26,7 @@ import static com.VER7U7.Server.JailConstants.*;
 import static com.VER7U7.Server.Network.NetworkConstants.*;
 import static com.VER7U7.Server.Packets.PacketConstants.*;
 import static com.VER7U7.Server.Packets.OutgoingPacketData.*;
+import static com.VER7U7.Server.Packets.IncomingPacketData.*;
 
 public class NetworkEngine extends Thread {
     private final int port;
@@ -41,6 +40,7 @@ public class NetworkEngine extends Thread {
     private final ConcurrentLinkedQueue<NetworkIncomingMessage> incomingQueue;
     private final ConcurrentLinkedQueue<NetworkOutgoingMessage> outgoingQueue;
     private final ConcurrentMap<Integer, NetworkWaitConfirmMessage> waitConfirmationPackets;
+    private final ConcurrentMap<SocketAddress, NetworkConfirmData> confirmedPacketsQueue;
 
     public AtomicBoolean networkReady = new AtomicBoolean(false);
     private Runnable callbackSessionTimeout;
@@ -54,6 +54,7 @@ public class NetworkEngine extends Thread {
         this.playerIdToSession = new ConcurrentHashMap<>();
         this.nonAuthedConnections = new ConcurrentHashMap<>();
         this.waitConfirmationPackets = new ConcurrentHashMap<>();
+        this.confirmedPacketsQueue = new ConcurrentHashMap<>();
 
         this.incomingQueue = new ConcurrentLinkedQueue<>();
         this.outgoingQueue = new ConcurrentLinkedQueue<>();
@@ -181,13 +182,16 @@ public class NetworkEngine extends Thread {
      * @return return true if this packet is ask {@code ID 7}
     * */
     public boolean updatePing(NetworkPacket packet, NetworkPlayerSession session) {
-        if (packet.getPacketId() == IncomingPacketType.Ask.getID()) {
+        if (packet.getPacketId() == IncomingPacketType.Ping.getID()) {
             JailPlayer player = jailPools.playersPool.get(session.getPlayerID());
-            if (packet.getData()[0] == 0) {
-                OutgoingAsk outgoingAsk = new OutgoingAsk((byte) 1, System.currentTimeMillis());
+            IncomingPing pingPacket = new IncomingPing();
+            pingPacket.Deserialize(packet);
+
+            if (pingPacket.step == 0) {
+                OutgoingPing outgoingAsk = new OutgoingPing((byte) 1, System.currentTimeMillis());
                 addPacketToOutgoing(outgoingAsk.Serialize(), 0, session.getPlayerID());
                 player.askSendTime = System.currentTimeMillis();
-            } else if (packet.getData()[0] == 2) {
+            } else if (pingPacket.step == 2) {
                 long deltaTime = System.currentTimeMillis() - player.askSendTime;
                 player.RTT = (int)deltaTime;
                 System.out.println(deltaTime);
@@ -197,14 +201,26 @@ public class NetworkEngine extends Thread {
         return false;
     }
 
+
+    /**
+     * Confirmation of packet acceptance occurs in several stages.
+     * Stage 1 - the client sends a packet and if the system specifies that it needs to be confirmed,
+     * it is added to the packet confirmation processing stream and waits for confirmation.
+     * Stage 2 - After receiving it by the server, the server adds it to the confirmation pool
+     * and sends it to the server. (The confirmation pool is cleared either
+     * if 10 ms have passed or if there are more than 5 packets in the pool).
+     * Stage 3 - the client receives the confirmation packet and removes the transfer IT from the confirmation pools.
+     * If no response has been received after some time, the packet is resent and the loss counter is incremented.
+     * The timing after which the packet is considered lost varies from RTT * 2 (When the application starts,
+     * RTT = 2000 so that there is no spam with connection packets, after RTT is calculated, it will be used further).
+     * @return return true if this packet is confirmAsk {@code ID 8}
+     * */
     public boolean updateReceiptConfirmation(NetworkPacket packet, SocketAddress address) {
         if (packet.getPacketId() == IncomingPacketType.ConfirmASK.getID()) {
-            int countTransfers = packet.getData().length % 4;
-            ByteBuffer buffer = LittleByteBuffer.wrap(packet.getData());
+            IncomingConfirmAsk incomingConfirm = new IncomingConfirmAsk();
+            incomingConfirm.Deserialize(packet);
 
-            for (int i = 0; i < countTransfers; i++) {
-                int transferID = buffer.getInt();
-
+            for (int transferID : incomingConfirm.transfers) {
                 NetworkWaitConfirmMessage waitMessage = waitConfirmationPackets.get(transferID);
                 if (waitMessage == null)
                     continue;
@@ -214,8 +230,27 @@ public class NetworkEngine extends Thread {
 
                 waitConfirmationPackets.remove(transferID);
             }
-
             return true;
+        } else {
+            IncomingPacketType incoming = IncomingPacketType.fromID(packet.getPacketId());
+            if (incoming.hasNeedConfirm()) {
+                NetworkConfirmData userConfirmData;
+                if (!confirmedPacketsQueue.containsKey(address)) {
+                    userConfirmData = new NetworkConfirmData();
+                    userConfirmData.setLastConfirmPacketTime(System.currentTimeMillis());
+                    confirmedPacketsQueue.put(address, userConfirmData);
+                } else {
+                    userConfirmData = confirmedPacketsQueue.get(address);
+                }
+
+                userConfirmData.setLastConfirmPacketTime(System.currentTimeMillis());
+
+                if (userConfirmData.getTransfers().size() < 1) {
+                    userConfirmData.getTransfers().add(packet.getPacketTransferID());
+                    userConfirmData.setFirstConfirmAddTime(System.currentTimeMillis());
+                } else
+                    userConfirmData.getTransfers().add(packet.getPacketTransferID());
+            }
         }
         return false;
     }
@@ -339,10 +374,10 @@ public class NetworkEngine extends Thread {
     private void processWaitConfirmationPackets() {
 
         Iterator<Map.Entry<Integer, NetworkWaitConfirmMessage>> iterator = waitConfirmationPackets.entrySet().iterator();
+        long currentTime = System.currentTimeMillis();
 
         while (iterator.hasNext()) {
             Map.Entry<Integer, NetworkWaitConfirmMessage> entry = iterator.next();
-            long currentTime = System.currentTimeMillis();
             var waitMessage = entry.getValue();
 
             try {
@@ -373,7 +408,37 @@ public class NetworkEngine extends Thread {
             }catch(IOException e) {
                 e.printStackTrace();
             }
+        }
 
+        Iterator<Map.Entry<SocketAddress, NetworkConfirmData>> confirmedIterator = confirmedPacketsQueue.entrySet().iterator();
+        while (confirmedIterator.hasNext()) {
+            Map.Entry<SocketAddress, NetworkConfirmData> entry = confirmedIterator.next();
+            SocketAddress address = entry.getKey();
+            NetworkConfirmData confirmData = entry.getValue();
+
+            if (System.currentTimeMillis() - confirmData.getLastConfirmPacketTime() > NEJB_PLAYER_TIMEOUT_MS) {
+                confirmedIterator.remove();
+                continue;
+            }
+
+            if (
+                    (currentTime - confirmData.getFirstConfirmAddTime() > 10 &&
+                    confirmData.getTransfers().size() > 0 ) ||
+                    confirmData.getTransfers().size() > 5
+            ) {
+                try {
+                    OutgoingConfirmAsk confirmAsk = new OutgoingConfirmAsk(new int[confirmData.getTransfers().size()]);
+                    for (int i = 0; i < confirmAsk.transfers.length; i++) {
+                        Integer transfer = confirmData.getTransfers().poll();
+                        if (transfer == null)
+                            continue;
+                        confirmAsk.transfers[i] = transfer;
+                    }
+                    channel.send(confirmAsk.Serialize().getFormattedDataBuffer(), address);
+                }catch(IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -396,6 +461,7 @@ public class NetworkEngine extends Thread {
                 iterator.remove();
                 incomingQueue.add(new NetworkIncomingMessage(null, NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER, session.getPlayerID()));
                 playerIdToSession.remove(session.getPlayerID());
+                confirmedPacketsQueue.remove(session.getClientAddress());
                 if (callbackSessionTimeout != null)
                     callbackSessionTimeout.run();
             }

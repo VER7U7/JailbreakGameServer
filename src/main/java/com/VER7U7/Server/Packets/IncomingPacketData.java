@@ -56,18 +56,36 @@ public abstract class IncomingPacketData {
         }
     }
 
-    public static class IncomingAsk extends IncomingPacketData {
+    public static class IncomingPing extends IncomingPacketData {
         public byte step;
         public long senderTimestamp;
 
-        public IncomingAsk() {
-            super(IncomingPacketType.Ask);
+        public IncomingPing() {
+            super(IncomingPacketType.Ping);
         }
 
         public void Deserialize(NetworkPacket packet) {
             ByteBuffer byteBuffer = LittleByteBuffer.wrap(packet.getData());
             this.step = byteBuffer.get();
             this.senderTimestamp = byteBuffer.getLong();
+        }
+    }
+
+    public static class IncomingConfirmAsk extends IncomingPacketData {
+        public int[] transfers;
+
+        public IncomingConfirmAsk() {
+            super(IncomingPacketType.ConfirmASK);
+        }
+
+        @Override
+        public void Deserialize(NetworkPacket packet) {
+            int countTransfers = packet.getData().length / 4;
+            transfers = new int[countTransfers];
+            ByteBuffer buffer = LittleByteBuffer.wrap(packet.getData());
+            for (int i = 0; i < countTransfers; i++) {
+                transfers[i] = buffer.getInt();
+            }
         }
     }
 }

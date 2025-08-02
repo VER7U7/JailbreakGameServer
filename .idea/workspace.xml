@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Refactored packet serialize/deserialize systems, refactored packet incoming/outgoing ids. Refactored disconnection reasons.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkWaitConfirmMessage.java" afterDir="false" />
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Refactored processing packets, receipt confirmation system not finished.">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkConfirmData.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/IncomingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/IncomingPacketData.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/OutgoingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/OutgoingPacketData.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" afterDir="false" />
     </list>
@@ -141,7 +140,14 @@
       <option name="project" value="LOCAL" />
       <updated>1753983753670</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Refactored processing packets, receipt confirmation system not finished.">
+      <created>1754082306509</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1754082306509</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -175,6 +181,7 @@
     <MESSAGE value="JUPP updated&#10;Added jail server and new Network UDP protocol" />
     <MESSAGE value="Synced jail server with unity client. Added processing RTT by Network Engine. Fixed problem with delay by send packets (cause: selector.select(10)). Now when player connected to server, jail server creating new instance in playersPool (JailPools)." />
     <MESSAGE value="Refactored packet serialize/deserialize systems, refactored packet incoming/outgoing ids. Refactored disconnection reasons." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactored packet serialize/deserialize systems, refactored packet incoming/outgoing ids. Refactored disconnection reasons." />
+    <MESSAGE value="Refactored processing packets, receipt confirmation system not finished." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactored processing packets, receipt confirmation system not finished." />
   </component>
 </project>

@@ -7,7 +7,7 @@ public class PacketConstants {
         NewConnection(1, true),
         ConnectionInvitationCode(2, true),
 
-        Ask(7, false), //Ping
+        Ping(7, false),
         ConfirmASK(8, false),
 
         Disconnect(255, false);
@@ -39,7 +39,7 @@ public class PacketConstants {
         ConnectionSendInvitationCode(1, true),
         ConnectionSuccess(2, true),
 
-        Ask(7, false), //Ping
+        Ping(7, false),
         ConfirmAsk(8, false),
 
         PlayerMove(10, false),
