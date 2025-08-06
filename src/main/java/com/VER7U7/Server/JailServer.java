@@ -106,7 +106,7 @@ public class JailServer extends Thread {
             }
 
             if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER) {
-                jailPools.playersPool.remove(incomingMessage.getPlayerID());
+                jailPools.DeletePlayer(incomingMessage.getPlayerID());
             }
 
         }

@@ -6,6 +6,8 @@ import java.util.Objects;
 
 public class NetworkOutgoingMessage extends NetworkMessage {
 
+    public static final int NETWORK_OUTGOING_DEFAULT = 0;
+
     private int playerID;
 
     public NetworkOutgoingMessage(NetworkPacket packet, int messageType, int playerID) {

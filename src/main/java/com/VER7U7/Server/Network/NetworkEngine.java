@@ -5,6 +5,7 @@ import com.VER7U7.Server.Network.Exceptions.IllegalPacketFormatException;
 import com.VER7U7.Server.Network.States.*;
 import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Packets.IncomingPacketData;
+import com.VER7U7.Server.Packets.OutgoingPacketData;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
 
 import java.io.IOException;
@@ -71,7 +72,27 @@ public class NetworkEngine extends Thread {
 
         this.start();
         networkReady.set(true);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownServer));
         return this;
+    }
+
+    private void shutdownServer() {
+        System.out.println("Hook is ready");
+        try {
+            if (networkReady.get()) {
+                OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(DisconnectReason.ClientDisconnect);
+                NetworkPacket outgoingPacket = disconnectPacket.Serialize();
+                for (Map.Entry<Integer, NetworkPlayerSession> entry : playerIdToSession.entrySet()) {
+                    addPacketToOutgoing(outgoingPacket, 0, entry.getKey());
+                    channel.send(disconnectPacket.Serialize().getFormattedDataBuffer(), entry.getValue().getClientAddress());
+                    disconnectPlayer(entry.getValue().getClientAddress(), DisconnectReason.ClientDisconnect);
+                }
+                StopNetwork();
+            }
+        }catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean getNetworkAvailable() {
@@ -162,6 +183,9 @@ public class NetworkEngine extends Thread {
                     }
                     session.updateLastSeenTimestamp();
 
+                    if (updateServicePackets(packet, session))
+                        return;
+
                     if (updatePing(packet, session))
                         return;
                 }catch (IllegalPacketFormatException e) {
@@ -196,6 +220,16 @@ public class NetworkEngine extends Thread {
                 player.RTT = (int)deltaTime;
                 System.out.println(deltaTime);
             }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateServicePackets(NetworkPacket packet, NetworkPlayerSession session) {
+        if (packet.getPacketId() == IncomingPacketType.Disconnect.getID()) {
+            IncomingDisconnect disconnectPacket = new IncomingDisconnect(packet);
+            disconnectPlayer(session.getClientAddress(), disconnectPacket.disconnectReason);
+            NetworkLog.println("Player disconnected by reason: " + disconnectPacket.disconnectReason.getText());
             return true;
         }
         return false;
@@ -347,26 +381,28 @@ public class NetworkEngine extends Thread {
         NetworkOutgoingMessage outgoingMessage;
         while ((outgoingMessage = outgoingQueue.poll()) != null) {
 
-            NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
-            if (session != null) {
-                try {
+            if (outgoingMessage.getMessageType() == NetworkOutgoingMessage.NETWORK_OUTGOING_DEFAULT) {
+                NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
+                if (session != null) {
+                    try {
 
-                    OutgoingPacketType checkConfirm = OutgoingPacketType.fromID(outgoingMessage.getPacket().getPacketId());
-                    if (checkConfirm.hasNeedConfirm()) {
-                        NetworkPacket packet = outgoingMessage.getPacket();
-                        int transferID = 1;
-                        while(waitConfirmationPackets.containsKey(transferID)) {
-                            transferID = random.nextInt(Integer.MAX_VALUE);
+                        OutgoingPacketType checkConfirm = OutgoingPacketType.fromID(outgoingMessage.getPacket().getPacketId());
+                        if (checkConfirm.hasNeedConfirm()) {
+                            NetworkPacket packet = outgoingMessage.getPacket();
+                            int transferID = 1;
+                            while(waitConfirmationPackets.containsKey(transferID)) {
+                                transferID = random.nextInt(Integer.MAX_VALUE);
+                            }
+                            packet.setPacketTransferID(transferID);
+                            waitConfirmationPackets.put(transferID, new NetworkWaitConfirmMessage(packet, session.getClientAddress(), System.currentTimeMillis()));
                         }
-                        packet.setPacketTransferID(transferID);
-                        waitConfirmationPackets.put(transferID, new NetworkWaitConfirmMessage(packet, session.getClientAddress(), System.currentTimeMillis()));
+                        channel.send(outgoingMessage.getPacket().getFormattedDataBuffer(), session.getClientAddress());
+                    }catch(IOException e) {
+                        e.printStackTrace();
                     }
-                    channel.send(outgoingMessage.getPacket().getFormattedDataBuffer(), session.getClientAddress());
-                }catch(IOException e) {
-                    e.printStackTrace();
+                } else {
+                    NetworkLog.errprintnln("Unknown session, may be client break connection.");
                 }
-            } else {
-                NetworkLog.errprintnln("Unknown session, may be client break connection.");
             }
         }
     }
@@ -458,12 +494,8 @@ public class NetworkEngine extends Thread {
             NetworkPlayerSession session = entry.getValue();
             if (currentTime - session.getLastSeenTimestamp() > NEJB_PLAYER_TIMEOUT_MS) {
                 NetworkLog.println("Session " + session.getClientAddress() + " has been closed by timeout.");
-                iterator.remove();
-                incomingQueue.add(new NetworkIncomingMessage(null, NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER, session.getPlayerID()));
-                playerIdToSession.remove(session.getPlayerID());
-                confirmedPacketsQueue.remove(session.getClientAddress());
-                if (callbackSessionTimeout != null)
-                    callbackSessionTimeout.run();
+                //iterator.remove();
+                disconnectPlayer(session.getClientAddress(), DisconnectReason.TimeOut);
             }
         }
 
@@ -478,6 +510,18 @@ public class NetworkEngine extends Thread {
                 }
             }
         }
+    }
+
+    private void disconnectPlayer(SocketAddress address, DisconnectReason reason) {
+        NetworkPlayerSession session = addressToSession.get(address);
+        OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(reason);
+        incomingQueue.add(new NetworkIncomingMessage(disconnectPacket.Serialize(), NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER, session.getPlayerID()));
+
+        playerIdToSession.remove(session.getPlayerID());
+        addressToSession.remove(session.getClientAddress());
+        confirmedPacketsQueue.remove(session.getClientAddress());
+        if (callbackSessionTimeout != null)
+            callbackSessionTimeout.run();
     }
 
     public static class ConnectionData {

@@ -69,17 +69,23 @@ public class PacketConstants {
     }
 
     public enum DisconnectReason {
-        VersionNotMatch(1),
-        TryAgain(2),
-        WrongOrder(3),
-        WrongCode(4);
+        VersionNotMatch(1, "Version not match"),
+        TryAgain(2, "Try Again"),
+        WrongOrder(3, "Wrong order"),
+        WrongCode(4, "Wrong code"),
+        TimeOut(5, "Time out"),
+        ClientDisconnect(6, "Client disconnect");
 
         private final int value;
-        DisconnectReason(int value) {
-            this.value = value;
+        private final String text;
+        DisconnectReason(int value, String text) {
+            this.value = value; this.text = text;
         }
         public int getID() {
             return value;
+        }
+        public String getText() {
+            return text + " ("+ value +")";
         }
         public static DisconnectReason fromID(int value) {
             for (DisconnectReason reason : DisconnectReason.values()) {

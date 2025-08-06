@@ -50,6 +50,11 @@ public abstract class IncomingPacketData {
             super(IncomingPacketType.Disconnect);
         }
 
+        public IncomingDisconnect(NetworkPacket packet) {
+            this();
+            Deserialize(packet);
+        }
+
         @Override
         public void Deserialize(NetworkPacket packet) {
             this.disconnectReason = DisconnectReason.fromID(LittleByteBuffer.wrap(packet.getData()).get() & 0xFF);
