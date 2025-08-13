@@ -19,6 +19,10 @@ public class JUPPPacket {
         this.data = data;
     }
 
+    public JUPPPacket(byte[] data, int packetID) {
+        this(data, (short)packetID);
+    }
+
     public JUPPPacket(byte[] data, short packetID, int packetTransferID){
         this(data, packetID);
         this.packetTransferID = packetTransferID;

@@ -194,7 +194,7 @@ public class JUPPBridge {
                     dos.write(messageToSend);
                     dos.flush();
 
-                    JUPPLog.println("Packet with id {" + packet.packetID + "} sent successfully.");
+                    //JUPPLog.println("Packet with id {" + packet.packetID + "} sent successfully.");
                 }catch (SocketException se) {
                     JUPPLog.errprintnln("[Client] Socket Error in write loop: " + se.getMessage());
                     JUPPLog.errprintnln("[Client] Connection unexpectedly lost during write.");

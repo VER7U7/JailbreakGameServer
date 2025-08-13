@@ -6,6 +6,7 @@ import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Packets.JailPacketService;
 import com.VER7U7.Server.Utils.DeltaTime;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
+import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,9 +26,12 @@ public class JailServer extends Thread {
 
     /* RUNTIME */
     public AtomicBoolean serverRunning = new AtomicBoolean(false);
-    private DeltaTime deltaTime;
+
+    /* TICKS */
     private long ticksCount;
-    private long lastPoint;
+    private int actualTicks;
+    private long lastTickTime = System.nanoTime();
+    private long lastTickRateTime = System.nanoTime();
 
     public JailServer() {
 
@@ -36,12 +40,11 @@ public class JailServer extends Thread {
     public void StartSimulation() {
         serverRunning.set(true);
         try {
-            deltaTime = new DeltaTime();
             jailPools = new JailPools().InitializePools();
 
             playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork();
             playersNetwork.jailPools = jailPools;
-            //physicController = new JUPPController(physicsEngine);
+            physicController = new JUPPController(physicsEngine);
             jailPacketService = new JailPacketService(this, physicController, playersNetwork, jailPools);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -65,23 +68,36 @@ public class JailServer extends Thread {
 
         try {
             while(true) {
-                deltaTime.registerStart();
+                long now = System.nanoTime();
+                long elapsedTime = now - lastTickTime;
 
-                //update packets
-                processIncomingMessages();
+                if (elapsedTime >= NS_PER_SERVER_TICK) {
+                    lastTickTime += NS_PER_SERVER_TICK;
 
-                if (ticksCount - lastPoint > 64) {
-                    lastPoint = ticksCount;
+                    actualTicks++;
+                    if (now - lastTickRateTime >= 1_000_000_000L) {
+                        System.out.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
+                        actualTicks = 0;
+                        lastTickRateTime = now;
+                    }
+
+                    //--- START TICK PROCESSING ---
+                    ticksCount++;
+                    processIncomingMessages();
+                    physicController.endTickSignal(ticksCount);
+
+                    if (System.nanoTime() - lastTickTime > NS_PER_SERVER_TICK) {
+                        lastTickTime = System.nanoTime();
+                    }
+                } else {
+                    long sleepTimeNs = NS_PER_SERVER_TICK - elapsedTime;
+                    long sleepTimeMs = sleepTimeNs / 1_000_000;
+                    int sleepTimeNsRemainder = (int) (sleepTimeMs % 1_000_000);
+                    if (sleepTimeMs > 0) {
+                        Thread.sleep(sleepTimeMs, sleepTimeNsRemainder);
+                    }
                 }
 
-
-                ticksCount++;
-                deltaTime.registerEnd();
-                sleep(1024 / SERVER_TICK_RATE -
-                        (deltaTime.getDeltaTimeMillis() > (1024 / SERVER_TICK_RATE) ?
-                                (1024 / SERVER_TICK_RATE) :
-                                deltaTime.getDeltaTimeMillis()
-                        ));
             }
         }catch (InterruptedException ie) {
             Thread.currentThread().interrupt();

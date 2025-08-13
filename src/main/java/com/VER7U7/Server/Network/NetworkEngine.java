@@ -216,9 +216,12 @@ public class NetworkEngine extends Thread {
                 addPacketToOutgoing(outgoingAsk.Serialize(), 0, session.getPlayerID());
                 player.askSendTime = System.currentTimeMillis();
             } else if (pingPacket.step == 2) {
-                long deltaTime = System.currentTimeMillis() - player.askSendTime;
-                player.RTT = (int)deltaTime;
-                System.out.println(deltaTime);
+                long newRTT = System.currentTimeMillis() - player.askSendTime;
+                if (player.RTT == 0)
+                    player.RTT = (int)newRTT;
+                else
+                    player.RTT = (int)((player.RTT * 9 + newRTT) / 10);
+                System.out.println(player.RTT);
             }
             return true;
         }
@@ -432,9 +435,9 @@ public class NetworkEngine extends Thread {
 
                     int RTT = jailPools.playersPool.get(playerId).RTT + 8;
                     if (RTT > NEJB_PLAYER_TIMEOUT_MS)
-                        RTT = (int)NEJB_CONFIRM_NOT_LOGIN_MS;
+                        RTT = NEJB_CONFIRM_NOT_LOGIN_MS;
 
-                    int confirmDelay = RTT * 2;
+                    int confirmDelay = Math.max(RTT * 2, NEJB_CONFIRM_LOGIN_MS);
 
                     if ((currentTime - waitMessage.getLastTryTimestamp()) > confirmDelay) {
                         waitMessage.setLastTryTimestamp(currentTime);

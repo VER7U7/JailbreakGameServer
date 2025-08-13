@@ -13,13 +13,13 @@ public class Main {
     public static int JUBB_NETWORK_PORT = 6767;
 
     public static void main(String[] args) throws InterruptedException, JUPPExceptions.VersionNotMatch {
-        //physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT));
-        //physicsEngine.Start();
+        physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT);
+        physicsEngine.Start();
 
         JailServer jailServer = new JailServer();
         jailServer.StartSimulation();
         jailServer.join();
 
-        //physicsEngine.Close();
+        physicsEngine.Close();
     }
 }

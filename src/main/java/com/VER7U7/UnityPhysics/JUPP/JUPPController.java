@@ -20,8 +20,17 @@ public class JUPPController {
     *  ALL OPERATIONS ARE CARRIED OUT IN LITTLE ENDIAN MODE
     * */
 
+    public boolean endTickSignal(long tickCounts) {
+        byte[] data = LittleByteBuffer.allocate(8)
+                .putLong(tickCounts)
+                .array();
+        JUPPPacket outPacket = new JUPPPacket(data, JuppOutgoingCommands.SyncEndTick.getID());
+        JUPPPacket incomingPacket = engine.sendWithResult(outPacket);
+        return true;
+    }
+
     public int createGameObject(String name) {
-        byte[] nameData = name.getBytes(StandardCharsets.US_ASCII);
+        /*byte[] nameData = name.getBytes(StandardCharsets.US_ASCII);
         byte[] data = LittleByteBuffer.allocate(nameData.length + 2)
                 .putShort((short)nameData.length)
                 .put(nameData, 0, nameData.length)
@@ -30,7 +39,8 @@ public class JUPPController {
         JUPPPacket incomingPacket = engine.sendWithResult(packet);
         if (incomingPacket == null)
             return -1;
-        return LittleByteBuffer.wrap(incomingPacket.getData()).getInt();
+        return LittleByteBuffer.wrap(incomingPacket.getData()).getInt();*/
+        return 0;
     }
 
 }
