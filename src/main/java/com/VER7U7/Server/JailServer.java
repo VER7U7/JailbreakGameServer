@@ -2,6 +2,8 @@ package com.VER7U7.Server;
 
 import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
+import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
+import com.VER7U7.Server.ObjectFactories.JailPlayerFactory;
 import com.VER7U7.Server.Objects.JailPlayer;
 import com.VER7U7.Server.Packets.JailPacketService;
 import com.VER7U7.Server.Utils.DeltaTime;
@@ -65,6 +67,7 @@ public class JailServer extends Thread {
     @Override
     public void run() {
         //initialize
+        physicController.setupPools((short)SERVER_MAX_PLAYERS);
 
         try {
             while(true) {
@@ -79,6 +82,8 @@ public class JailServer extends Thread {
                         System.out.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
                         actualTicks = 0;
                         lastTickRateTime = now;
+
+
                     }
 
                     //--- START TICK PROCESSING ---
@@ -111,20 +116,38 @@ public class JailServer extends Thread {
 
         NetworkIncomingMessage incomingMessage;
         while ((incomingMessage  = playersNetwork.getIncomingMessages().poll()) != null) {
-            if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
-                IncomingPacketType packetType = IncomingPacketType.fromID(incomingMessage.getPacket().getPacketId());
-                jailPacketService.callToPacketFactory(packetType, incomingMessage.getPlayerID(), incomingMessage.getPacket());
-                continue;
-            }
+            try {
+                if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
+                    IncomingPacketType packetType = IncomingPacketType.fromID(incomingMessage.getPacket().getPacketId());
+                    jailPacketService.callToPacketFactory(packetType, incomingMessage.getPlayerID(), incomingMessage.getPacket());
+                    continue;
+                }
 
-            if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER) {
-                jailPools.playersPool.put(incomingMessage.getPlayerID(), new JailPlayer());
-            }
+                if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER) {
+                    JailPlayer player = JailPlayerFactory.createPlayer(incomingMessage.getPlayerID())
+                            .setNickName("Player " + incomingMessage.getPlayerID())
+                            .build();
+                    jailPools.playersPool.put((int)player.playerID, player);
 
-            if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER) {
-                jailPools.DeletePlayer(incomingMessage.getPlayerID());
-            }
+                    if (!physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.AddPlayer)) {
+                        playersNetwork.addPacketToOutgoing(null, NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER, player.playerID);
+                    } else {
+                        JUPPLog.println("Added " + player.nickname + " with instance(" + player.unityInstanceID +
+                                ") at position(x:"+ player.position.x
+                                +"; y: "+ player.position.y +"; z: " + player.position.z + ")");
+                    }
+                }
 
+                if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER) {
+                    JailPlayer player = jailPools.playersPool.get(incomingMessage.getPlayerID());
+                    jailPools.DeletePlayer(player.playerID);
+                    physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.DeletePlayer);
+                    JUPPLog.println("Removed " + player.nickname + " from the server.");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

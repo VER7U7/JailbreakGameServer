@@ -74,7 +74,8 @@ public class PacketConstants {
         WrongOrder(3, "Wrong order"),
         WrongCode(4, "Wrong code"),
         TimeOut(5, "Time out"),
-        ClientDisconnect(6, "Client disconnect");
+        ClientDisconnect(6, "Client disconnect"),
+        InnerException(7, "Inner exception");
 
         private final int value;
         private final String text;

@@ -163,6 +163,7 @@ public class JUPPBridge {
                     break;
                 } catch (SocketException se) {
                     JUPPLog.println("[Client] Socket Error: " + se.getMessage());
+                    se.printStackTrace();
                     JUPPLog.println("[Client] Connection unexpectedly lost.");
                     break;
                 } catch (IOException ioe) {

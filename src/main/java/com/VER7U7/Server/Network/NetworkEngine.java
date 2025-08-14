@@ -221,7 +221,6 @@ public class NetworkEngine extends Thread {
                     player.RTT = (int)newRTT;
                 else
                     player.RTT = (int)((player.RTT * 9 + newRTT) / 10);
-                System.out.println(player.RTT);
             }
             return true;
         }
@@ -403,6 +402,13 @@ public class NetworkEngine extends Thread {
                     }catch(IOException e) {
                         e.printStackTrace();
                     }
+                } else {
+                    NetworkLog.errprintnln("Unknown session, may be client break connection.");
+                }
+            } else if (outgoingMessage.getMessageType() == NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER) {
+                NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
+                if (session != null) {
+                    disconnectPlayer(session.getClientAddress(), DisconnectReason.InnerException);
                 } else {
                     NetworkLog.errprintnln("Unknown session, may be client break connection.");
                 }

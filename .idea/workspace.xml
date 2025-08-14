@@ -4,17 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Added disconnect packet logic. Need to fix something errors from client and add time out logic.">
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Fixed bugs in the client code and added time out. Improved RTT system (fixed dos on 0 RTT) and synchronized Unity Physics Server with Java server (UPS now work in 64+- fps and even frame controlled by java server)">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/ObjectFactories/JailPlayerFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/Vector3.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkOutgoingMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/States/NetworkOutgoingMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPCommons.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPCommons.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -165,7 +166,14 @@
       <option name="project" value="LOCAL" />
       <updated>1754499773115</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Fixed bugs in the client code and added time out. Improved RTT system (fixed dos on 0 RTT) and synchronized Unity Physics Server with Java server (UPS now work in 64+- fps and even frame controlled by java server)">
+      <created>1755094836637</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1755094836637</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -202,6 +210,7 @@
     <MESSAGE value="Refactored processing packets, receipt confirmation system not finished." />
     <MESSAGE value="Receipt confirmation system finished. Renamed packet Ask to Ping." />
     <MESSAGE value="Added disconnect packet logic. Need to fix something errors from client and add time out logic." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added disconnect packet logic. Need to fix something errors from client and add time out logic." />
+    <MESSAGE value="Fixed bugs in the client code and added time out. Improved RTT system (fixed dos on 0 RTT) and synchronized Unity Physics Server with Java server (UPS now work in 64+- fps and even frame controlled by java server)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed bugs in the client code and added time out. Improved RTT system (fixed dos on 0 RTT) and synchronized Unity Physics Server with Java server (UPS now work in 64+- fps and even frame controlled by java server)" />
   </component>
 </project>

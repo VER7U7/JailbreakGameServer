@@ -7,6 +7,7 @@ import java.util.Objects;
 public class NetworkOutgoingMessage extends NetworkMessage {
 
     public static final int NETWORK_OUTGOING_DEFAULT = 0;
+    public static final int NETWORK_DISCONNECT_PLAYER = 1;
 
     private int playerID;
 

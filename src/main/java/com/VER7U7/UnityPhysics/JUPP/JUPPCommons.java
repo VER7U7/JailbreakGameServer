@@ -14,7 +14,10 @@ public class JUPPCommons {
     public static final short JUPP_CREATE_OBJECT = 2;
 
     public enum JuppIncomingCommands {
-        ;
+        VersionControlPacket(1),
+        SyncEndTick(2),
+        SetupPoolsResult(3),
+        UpdatePlayerResult(4);
 
         private int value;
 
@@ -34,7 +37,9 @@ public class JUPPCommons {
 
     public enum JuppOutgoingCommands {
         VersionControlPacket(1),
-        SyncEndTick(2);
+        SyncEndTick(2),
+        SetupPools(3),
+        UpdatePlayer(4);
 
         private int value;
 
