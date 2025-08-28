@@ -1,7 +1,11 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
+import com.VER7U7.Server.Network.NetworkLog;
 import com.VER7U7.Server.Objects.JailPlayer;
+import com.VER7U7.Server.Packets.IncomingPacketData;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
+import static com.VER7U7.Server.Packets.IncomingPacketData.*;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -55,6 +59,23 @@ public class JUPPController {
             boolean success = buffer.get() != 0;
             if (!success)
                 return false;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean playerClientSync(IncomingLocalPlayerSync origSyncPacket, JailPlayer player) {
+        JUPPPacket outPacket = new JUPPPacket(player.clientPlayerSyncData(
+                origSyncPacket.playerPosition,
+                origSyncPacket.playerVelocity,
+                origSyncPacket.playerRotation),
+                JuppOutgoingCommands.UpdatePlayer.getID());
+        JUPPPacket physicsAnswer = engine.sendWithResult(outPacket);
+        ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData()); //status, vector3, vector3, quaternion;
+        if (buffer.get() == 1) {
+            player.position.fromBytes(buffer);
+            player.velocity.fromBytes(buffer);
+            player.rotation.fromBytes(buffer);
             return true;
         }
         return false;

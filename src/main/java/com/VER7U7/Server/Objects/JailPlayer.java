@@ -1,7 +1,6 @@
 package com.VER7U7.Server.Objects;
 
 import com.VER7U7.Server.Utils.LittleByteBuffer;
-import com.VER7U7.UnityPhysics.JUPP.JUPPCommons;
 
 import java.nio.charset.StandardCharsets;
 
@@ -16,6 +15,11 @@ public class JailPlayer {
 
     //Transform
     public Vector3 position = new Vector3();
+    public Vector3 velocity = new Vector3();
+    public Quaternion rotation = new Quaternion();
+
+    //timestamps
+    public long nsLastLocalPlayerSyncTime;
 
     //Network
     public int RTT;
@@ -40,10 +44,21 @@ public class JailPlayer {
                 .array();
     }
 
+    public byte[] clientPlayerSyncData(Vector3 position, Vector3 velocity, Quaternion rotation) {
+        return LittleByteBuffer.allocate(4 + (Float.BYTES * 3) + (Float.BYTES * 3) + (Float.BYTES * 4))
+                .putShort((short) PlayerUpdateType.ClientSyncPlayer.getID())
+                .putShort(playerID)
+                .put(position.getBytes())
+                .put(velocity.getBytes())
+                .put(rotation.getBytes())
+                .array();
+    }
+
 
     public enum PlayerUpdateType {
         AddPlayer(1),
-        DeletePlayer(2);
+        DeletePlayer(2),
+        ClientSyncPlayer(3);
 
         private int value;
 

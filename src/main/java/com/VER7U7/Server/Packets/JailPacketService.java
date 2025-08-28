@@ -4,6 +4,7 @@ import com.VER7U7.Server.JailPools;
 import com.VER7U7.Server.JailServer;
 import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.NetworkPacket;
+import com.VER7U7.Server.PacketFunctions.FunctionGlobalArgs;
 import com.VER7U7.Server.PacketFunctions.PacketFunction;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
@@ -13,6 +14,7 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -22,7 +24,7 @@ public class JailPacketService {
 
     public Map<IncomingPacketType, PacketFunction> packetFactoryPool;
 
-    public JailPacketService(JailServer jailServer, JUPPController physicsController, NetworkEngine networkEngine, JailPools jailPools) {
+    public JailPacketService(FunctionGlobalArgs functionGlobalArgs) {
         List<Class<?>> classes = findAllClassesImplementingInterface("com.VER7U7.Server.PacketFunctions", PacketFunction.class);
 
         if (classes == null)
@@ -39,7 +41,7 @@ public class JailPacketService {
 
         packetFactoryPool = new LinkedHashMap<>();
         for (PacketFunction packetFunction : packets) {
-            IncomingPacketType packetType = packetFunction.initialize(jailServer, physicsController, networkEngine, jailPools);
+            IncomingPacketType packetType = packetFunction.initialize(functionGlobalArgs);
 
             if (packetType.getID() > 0)
                 packetFactoryPool.put(packetType, packetFunction);

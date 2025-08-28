@@ -10,6 +10,8 @@ public class PacketConstants {
         Ping(7, false),
         ConfirmASK(8, false),
 
+        LocalPlayerSync(12, false),
+
         Disconnect(255, false);
 
         private final int value;

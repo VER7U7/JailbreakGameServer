@@ -13,8 +13,7 @@ import static com.VER7U7.Server.Packets.PacketConstants.*;
 public class NewIncomingConnectionPacket implements PacketFunction {
 
     private Random rand = new Random();
-    private NetworkEngine networkEngine;
-    private JailPools jailPools;
+    private FunctionGlobalArgs globalArgs;
 
 
     public void process(int playerID, NetworkPacket networkPacket) {
@@ -23,9 +22,8 @@ public class NewIncomingConnectionPacket implements PacketFunction {
     }
 
     @Override
-    public IncomingPacketType initialize(JailServer jailServer, JUPPController physicsController, NetworkEngine networkEngine, JailPools jailPools) {
-        this.networkEngine = networkEngine;
-        this.jailPools = jailPools;
+    public IncomingPacketType initialize(FunctionGlobalArgs globalArgs) {
+        this.globalArgs = globalArgs;
         return IncomingPacketType.NewConnection;
     }
 }

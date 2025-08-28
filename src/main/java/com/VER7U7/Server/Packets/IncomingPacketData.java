@@ -1,6 +1,8 @@
 package com.VER7U7.Server.Packets;
 
 import com.VER7U7.Server.Network.NetworkPacket;
+import com.VER7U7.Server.Objects.Quaternion;
+import com.VER7U7.Server.Objects.Vector3;
 import com.VER7U7.Server.Utils.LittleByteBuffer;
 
 import java.nio.ByteBuffer;
@@ -91,6 +93,22 @@ public abstract class IncomingPacketData {
             for (int i = 0; i < countTransfers; i++) {
                 transfers[i] = buffer.getInt();
             }
+        }
+    }
+
+    public static class IncomingLocalPlayerSync extends IncomingPacketData {
+        public Vector3 playerPosition;
+        public Vector3 playerVelocity;
+        public Quaternion playerRotation;
+
+        public IncomingLocalPlayerSync() { super(IncomingPacketType.LocalPlayerSync); }
+
+        @Override
+        public void Deserialize(NetworkPacket packet) {
+            ByteBuffer buffer = LittleByteBuffer.wrap(packet.getData());
+            playerPosition = new Vector3(buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
+            playerVelocity = new Vector3(buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
+            playerRotation = new Quaternion(buffer.getFloat(), buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
         }
     }
 }

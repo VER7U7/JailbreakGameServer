@@ -1,16 +1,20 @@
 package com.VER7U7.Server;
 
 import com.VER7U7.Server.Network.NetworkEngine;
+import com.VER7U7.Server.Network.NetworkLog;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
 import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
 import com.VER7U7.Server.ObjectFactories.JailPlayerFactory;
 import com.VER7U7.Server.Objects.JailPlayer;
+import com.VER7U7.Server.PacketFunctions.FunctionGlobalArgs;
 import com.VER7U7.Server.Packets.JailPacketService;
 import com.VER7U7.Server.Utils.DeltaTime;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.VER7U7.Main.*;
@@ -47,7 +51,7 @@ public class JailServer extends Thread {
             playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork();
             playersNetwork.jailPools = jailPools;
             physicController = new JUPPController(physicsEngine);
-            jailPacketService = new JailPacketService(this, physicController, playersNetwork, jailPools);
+            jailPacketService = new JailPacketService(new FunctionGlobalArgs(this, physicController, playersNetwork, jailPools));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -114,8 +118,13 @@ public class JailServer extends Thread {
         if (!playersNetwork.getNetworkAvailable())
             return;
 
-        NetworkIncomingMessage incomingMessage;
-        while ((incomingMessage  = playersNetwork.getIncomingMessages().poll()) != null) {
+        List<NetworkIncomingMessage> messagesBatch = new ArrayList<>(); //push all packets in 1 container
+        NetworkIncomingMessage batchMessage;
+        while((batchMessage = playersNetwork.getIncomingMessages().poll()) != null) {
+            messagesBatch.add(batchMessage);
+        }
+
+        for (NetworkIncomingMessage incomingMessage : messagesBatch) { //process packets
             try {
                 if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
                     IncomingPacketType packetType = IncomingPacketType.fromID(incomingMessage.getPacket().getPacketId());

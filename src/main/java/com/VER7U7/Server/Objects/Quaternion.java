@@ -4,19 +4,20 @@ import com.VER7U7.Server.Utils.LittleByteBuffer;
 
 import java.nio.ByteBuffer;
 
-public class Vector3 {
-    public float x, y, z;
+public class Quaternion {
+    public float x, y, z, w;
 
-    public Vector3() { }
+    public Quaternion() {}
 
-    public Vector3(float x, float y, float z) {
+    public Quaternion(float x, float y, float z, float w) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.w = w;
     }
 
     public byte[] getBytes() {
-        return LittleByteBuffer.allocate(Float.BYTES * 3).putFloat(x).putFloat(y).putFloat(z).array();
+        return LittleByteBuffer.allocate(Float.BYTES * 4).putFloat(x).putFloat(y).putFloat(z).putFloat(w).array();
     }
 
     public void fromBytes(byte[] arg) {
@@ -24,11 +25,13 @@ public class Vector3 {
         x = buffer.getFloat();
         y = buffer.getFloat();
         z = buffer.getFloat();
+        w = buffer.getFloat();
     }
 
     public void fromBytes(ByteBuffer buffer) {
         x = buffer.getFloat();
         y = buffer.getFloat();
         z = buffer.getFloat();
+        w = buffer.getFloat();
     }
 }
