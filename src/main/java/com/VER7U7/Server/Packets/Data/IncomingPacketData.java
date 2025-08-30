@@ -1,14 +1,14 @@
-package com.VER7U7.Server.Packets;
+package com.VER7U7.Server.Packets.Data;
 
 import com.VER7U7.Server.Network.NetworkPacket;
-import com.VER7U7.Server.Objects.Quaternion;
-import com.VER7U7.Server.Objects.Vector3;
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Types.Quaternion;
+import com.VER7U7.Server.Types.Vector3;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 
 public abstract class IncomingPacketData {
     public IncomingPacketType type;

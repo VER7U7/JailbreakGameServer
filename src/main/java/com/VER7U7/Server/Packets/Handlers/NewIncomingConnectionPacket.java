@@ -1,14 +1,10 @@
-package com.VER7U7.Server.PacketFunctions;
+package com.VER7U7.Server.Packets.Handlers;
 
-import com.VER7U7.Server.JailPools;
-import com.VER7U7.Server.JailServer;
-import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.NetworkPacket;
-import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
 import java.util.Random;
 
-import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 
 public class NewIncomingConnectionPacket implements PacketFunction {
 

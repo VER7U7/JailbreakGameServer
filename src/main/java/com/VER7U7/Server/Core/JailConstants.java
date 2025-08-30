@@ -1,4 +1,4 @@
-package com.VER7U7.Server;
+package com.VER7U7.Server.Core;
 
 public class JailConstants {
 

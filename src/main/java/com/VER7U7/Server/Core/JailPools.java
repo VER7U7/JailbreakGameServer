@@ -1,10 +1,7 @@
-package com.VER7U7.Server;
+package com.VER7U7.Server.Core;
 
-import com.VER7U7.Server.Network.States.NetworkPlayerSession;
-import com.VER7U7.Server.Objects.JailPlayer;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 

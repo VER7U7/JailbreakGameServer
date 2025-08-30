@@ -1,12 +1,10 @@
 package com.VER7U7.Server.Network;
 
-import com.VER7U7.Server.JailPools;
+import com.VER7U7.Server.Core.JailPools;
 import com.VER7U7.Server.Network.Exceptions.IllegalPacketFormatException;
 import com.VER7U7.Server.Network.States.*;
-import com.VER7U7.Server.Objects.JailPlayer;
-import com.VER7U7.Server.Packets.IncomingPacketData;
-import com.VER7U7.Server.Packets.OutgoingPacketData;
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -23,11 +21,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.VER7U7.Server.JailConstants.*;
+import static com.VER7U7.Server.Core.JailConstants.*;
 import static com.VER7U7.Server.Network.NetworkConstants.*;
-import static com.VER7U7.Server.Packets.PacketConstants.*;
-import static com.VER7U7.Server.Packets.OutgoingPacketData.*;
-import static com.VER7U7.Server.Packets.IncomingPacketData.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Data.OutgoingPacketData.*;
+import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
 public class NetworkEngine extends Thread {
     private final int port;
@@ -436,8 +434,15 @@ public class NetworkEngine extends Thread {
                     }
                 } else {
                     int playerId = addressToPlayerID(waitMessage.getClientAddress());
-                    if (playerId == -1)
+                    if (playerId == -1) {
                         iterator.remove();
+                        return;
+                    }
+
+                    if (!jailPools.playersPool.containsKey(playerId)) {
+                        iterator.remove();
+                        return;
+                    }
 
                     int RTT = jailPools.playersPool.get(playerId).RTT + 8;
                     if (RTT > NEJB_PLAYER_TIMEOUT_MS)

@@ -1,15 +1,14 @@
-package com.VER7U7.Server.PacketFunctions;
+package com.VER7U7.Server.Packets.Handlers;
 
-import com.VER7U7.Server.JailConstants;
-import com.VER7U7.Server.JailPools;
+import com.VER7U7.Server.Core.JailConstants;
+import com.VER7U7.Server.Core.JailPools;
 import com.VER7U7.Server.Network.NetworkPacket;
-import static com.VER7U7.Server.Packets.IncomingPacketData.*;
+import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
-import com.VER7U7.Server.Objects.JailPlayer;
-import com.VER7U7.Server.Packets.PacketConstants;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 
-import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 
 public class LocalPlayerSyncPacket implements PacketFunction{
 
@@ -24,6 +23,9 @@ public class LocalPlayerSyncPacket implements PacketFunction{
         JailPlayer player = jailPools.playersPool.get(playerID);
 
         if (player.unityInstanceID == 0)
+            return;
+
+        if (player.state != JailPlayer.PlayerState.PlayerAlive)
             return;
 
         if (System.nanoTime() - player.nsLastLocalPlayerSyncTime <= JailConstants.NS_PER_SYNC_RATE)

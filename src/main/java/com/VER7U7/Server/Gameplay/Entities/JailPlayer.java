@@ -1,6 +1,9 @@
-package com.VER7U7.Server.Objects;
+package com.VER7U7.Server.Gameplay.Entities;
 
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Gameplay.Rules.BasicRules;
+import com.VER7U7.Server.Types.Quaternion;
+import com.VER7U7.Server.Types.Vector3;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
 import java.nio.charset.StandardCharsets;
 
@@ -9,6 +12,11 @@ public class JailPlayer {
     //Runtime
     public short playerID;
     public int unityInstanceID;
+
+    public PlayerState state;
+
+    //Gameplay
+    public BasicRules.Team playingTeam;
 
     //Database
     public String nickname;
@@ -54,6 +62,28 @@ public class JailPlayer {
                 .array();
     }
 
+
+    public enum PlayerState {
+        Spectator(2),
+        PlayerAlive(3),
+        PlayerDeath(4);
+
+
+        private int value;
+
+        PlayerState(int value) {
+            this.value = value;
+        }
+
+        public int getID() {return value;}
+        public PlayerState fromID (int value) {
+            for (PlayerState outgoing : PlayerState.values()) {
+                if(outgoing.getID() == value)
+                    return outgoing;
+            }
+            throw new IllegalArgumentException("No enum constant with value " + value);
+        }
+    }
 
     public enum PlayerUpdateType {
         AddPlayer(1),

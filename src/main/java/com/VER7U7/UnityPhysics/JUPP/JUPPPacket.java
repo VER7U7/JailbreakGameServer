@@ -1,10 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 

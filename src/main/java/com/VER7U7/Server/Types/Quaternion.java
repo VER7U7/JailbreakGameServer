@@ -1,6 +1,6 @@
-package com.VER7U7.Server.Objects;
+package com.VER7U7.Server.Types;
 
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
 import java.nio.ByteBuffer;
 

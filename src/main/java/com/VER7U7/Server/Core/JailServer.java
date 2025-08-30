@@ -1,14 +1,13 @@
-package com.VER7U7.Server;
+package com.VER7U7.Server.Core;
 
+import com.VER7U7.Server.Gameplay.Rules.BasicRules;
 import com.VER7U7.Server.Network.NetworkEngine;
-import com.VER7U7.Server.Network.NetworkLog;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
 import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
-import com.VER7U7.Server.ObjectFactories.JailPlayerFactory;
-import com.VER7U7.Server.Objects.JailPlayer;
-import com.VER7U7.Server.PacketFunctions.FunctionGlobalArgs;
-import com.VER7U7.Server.Packets.JailPacketService;
-import com.VER7U7.Server.Utils.DeltaTime;
+import com.VER7U7.Server.Gameplay.EntityFactories.JailPlayerFactory;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
+import com.VER7U7.Server.Packets.Handlers.FunctionGlobalArgs;
+import com.VER7U7.Server.Packets.Services.JailPacketService;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
 
@@ -18,8 +17,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.VER7U7.Main.*;
-import static com.VER7U7.Server.JailConstants.*;
-import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Core.JailConstants.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Data.OutgoingPacketData.*;
 
 public class JailServer extends Thread {
 
@@ -135,8 +135,14 @@ public class JailServer extends Thread {
                 if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER) {
                     JailPlayer player = JailPlayerFactory.createPlayer(incomingMessage.getPlayerID())
                             .setNickName("Player " + incomingMessage.getPlayerID())
+                            .setPlayingTeam(BasicRules.Team.Spectator)
                             .build();
                     jailPools.playersPool.put((int)player.playerID, player);
+
+                    player.state = JailPlayer.PlayerState.Spectator;
+                    playersNetwork.addPacketToOutgoing(
+                            new OutgoingSpectatorPacket(0).Serialize(), 0, player.playerID
+                    );
 
                     if (!physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.AddPlayer)) {
                         playersNetwork.addPacketToOutgoing(null, NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER, player.playerID);
@@ -144,6 +150,14 @@ public class JailServer extends Thread {
                         JUPPLog.println("Added " + player.nickname + " with instance(" + player.unityInstanceID +
                                 ") at position(x:"+ player.position.x
                                 +"; y: "+ player.position.y +"; z: " + player.position.z + ")");
+
+                        player.playingTeam = BasicRules.Team.Prisoner;
+                        playersNetwork.addPacketToOutgoing(
+                                new OutgoingSpawnPacket(BasicRules.Team.Prisoner.getID(),
+                                        player.position,
+                                        player.rotation
+                                        ).Serialize(), 0, player.playerID
+                        );
                     }
                 }
 

@@ -1,16 +1,11 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
-import com.VER7U7.Server.Network.NetworkLog;
-import com.VER7U7.Server.Objects.JailPlayer;
-import com.VER7U7.Server.Packets.IncomingPacketData;
-import com.VER7U7.Server.Utils.LittleByteBuffer;
-import static com.VER7U7.Server.Packets.IncomingPacketData.*;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
+import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import static com.VER7U7.UnityPhysics.JUPP.JUPPCommons.*;
 

@@ -1,4 +1,4 @@
-package com.VER7U7.Server.Packets;
+package com.VER7U7.Server.Packets.Factory;
 
 public class PacketConstants {
 
@@ -46,6 +46,10 @@ public class PacketConstants {
 
         PlayerMove(10, false),
         ChatMessage(11, true),
+
+        ClientSpectator(13, true),
+        ClientSpawn(14, true),
+        ClientDeath(15, true),
 
         Disconnect(255, false);
 

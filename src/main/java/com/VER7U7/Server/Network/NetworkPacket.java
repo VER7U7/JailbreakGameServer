@@ -1,11 +1,9 @@
 package com.VER7U7.Server.Network;
 
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.zip.CRC32;

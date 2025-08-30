@@ -1,6 +1,6 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
-import com.VER7U7.Server.Utils.LittleByteBuffer;
+import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 
 import java.io.*;
 import java.net.Socket;
@@ -8,8 +8,6 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;

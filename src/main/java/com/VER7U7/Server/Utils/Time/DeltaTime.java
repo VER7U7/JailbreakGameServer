@@ -1,4 +1,4 @@
-package com.VER7U7.Server.Utils;
+package com.VER7U7.Server.Utils.Time;
 
 public class DeltaTime {
 

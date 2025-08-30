@@ -1,6 +1,7 @@
-package com.VER7U7.Server.ObjectFactories;
+package com.VER7U7.Server.Gameplay.EntityFactories;
 
-import com.VER7U7.Server.Objects.JailPlayer;
+import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
+import com.VER7U7.Server.Gameplay.Rules.BasicRules;
 
 public class JailPlayerFactory {
 
@@ -21,6 +22,11 @@ public class JailPlayerFactory {
 
     public JailPlayerFactory setNickName(String nickName) {
         player.nickname = nickName;
+        return this;
+    }
+
+    public JailPlayerFactory setPlayingTeam(BasicRules.Team team) {
+        player.playingTeam = team;
         return this;
     }
 

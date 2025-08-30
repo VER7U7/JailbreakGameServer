@@ -1,10 +1,7 @@
 package com.VER7U7;
 
-import com.VER7U7.Server.JailServer;
+import com.VER7U7.Server.Core.JailServer;
 import com.VER7U7.UnityPhysics.JUPP.*;
-
-import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 
 public class Main {
     public static JUPPEngine physicsEngine;

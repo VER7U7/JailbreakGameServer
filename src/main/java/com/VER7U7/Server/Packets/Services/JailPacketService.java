@@ -1,12 +1,8 @@
-package com.VER7U7.Server.Packets;
+package com.VER7U7.Server.Packets.Services;
 
-import com.VER7U7.Server.JailPools;
-import com.VER7U7.Server.JailServer;
-import com.VER7U7.Server.Network.NetworkEngine;
 import com.VER7U7.Server.Network.NetworkPacket;
-import com.VER7U7.Server.PacketFunctions.FunctionGlobalArgs;
-import com.VER7U7.Server.PacketFunctions.PacketFunction;
-import com.VER7U7.UnityPhysics.JUPP.JUPPController;
+import com.VER7U7.Server.Packets.Handlers.FunctionGlobalArgs;
+import com.VER7U7.Server.Packets.Handlers.PacketFunction;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,18 +10,17 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
-import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import static com.VER7U7.Server.Packets.PacketConstants.*;
+import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 
 public class JailPacketService {
 
     public Map<IncomingPacketType, PacketFunction> packetFactoryPool;
 
     public JailPacketService(FunctionGlobalArgs functionGlobalArgs) {
-        List<Class<?>> classes = findAllClassesImplementingInterface("com.VER7U7.Server.PacketFunctions", PacketFunction.class);
+        List<Class<?>> classes = findAllClassesImplementingInterface("com.VER7U7.Server.Packets.Handlers", PacketFunction.class);
 
         if (classes == null)
             throw new RuntimeException("Classes with interface PacketFactory not found.");
