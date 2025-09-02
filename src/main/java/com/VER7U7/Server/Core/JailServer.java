@@ -151,6 +151,8 @@ public class JailServer extends Thread {
                                 ") at position(x:"+ player.position.x
                                 +"; y: "+ player.position.y +"; z: " + player.position.z + ")");
 
+                        player.state = JailPlayer.PlayerState.PlayerAlive;
+
                         player.playingTeam = BasicRules.Team.Prisoner;
                         playersNetwork.addPacketToOutgoing(
                                 new OutgoingSpawnPacket(BasicRules.Team.Prisoner.getID(),

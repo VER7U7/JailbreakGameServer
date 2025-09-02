@@ -15,6 +15,13 @@ public class Vector3 {
         this.z = z;
     }
 
+    public Vector3 putValues(float x, float y, float z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        return this;
+    }
+
     public byte[] getBytes() {
         return LittleByteBuffer.allocate(Float.BYTES * 3).putFloat(x).putFloat(y).putFloat(z).array();
     }

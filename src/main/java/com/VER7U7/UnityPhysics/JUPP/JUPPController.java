@@ -1,6 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
+import com.VER7U7.Server.Types.Vector3;
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
@@ -61,16 +62,23 @@ public class JUPPController {
 
     public boolean playerClientSync(IncomingLocalPlayerSync origSyncPacket, JailPlayer player) {
         JUPPPacket outPacket = new JUPPPacket(player.clientPlayerSyncData(
-                origSyncPacket.playerPosition,
-                origSyncPacket.playerVelocity,
-                origSyncPacket.playerRotation),
+                origSyncPacket.cameraPos,
+                origSyncPacket.cameraRot,
+                origSyncPacket.offsetZ,
+                origSyncPacket.horizontal,
+                origSyncPacket.vertical,
+                origSyncPacket.jumpDown,
+                origSyncPacket.sprintDown),
                 JuppOutgoingCommands.UpdatePlayer.getID());
+
         JUPPPacket physicsAnswer = engine.sendWithResult(outPacket);
         ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData()); //status, vector3, vector3, quaternion;
         if (buffer.get() == 1) {
             player.position.fromBytes(buffer);
             player.velocity.fromBytes(buffer);
             player.rotation.fromBytes(buffer);
+            player.cameraPosition = origSyncPacket.cameraPos;
+            player.cameraRotation = origSyncPacket.cameraRot;
             return true;
         }
         return false;

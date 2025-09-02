@@ -4,36 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Added client player sync. Todo: add delay between creation a player instance in UPS and sends client player sync. And add protection from unauthorized access.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Rules/BasicRules.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Factory/PacketsFactory.java" afterDir="false" />
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Edited local player sync between player and server (now client send inputs and server calculate player coordinates). TODO: Add sync between server and player coordinates at client. Fix jumps. ADD Cache reflected + annotation system for automatic serialize packets;">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConnectionData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailConnectionData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailPools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailPools.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkPacket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/ObjectFactories/JailPlayerFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/EntityFactories/JailPlayerFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Entities/JailPlayer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/Quaternion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Quaternion.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Objects/Vector3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Vector3.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/FunctionGlobalArgs.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/FunctionGlobalArgs.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/LocalPlayerSyncPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/LocalPlayerSyncPacket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/NewIncomingConnectionPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/NewIncomingConnectionPacket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/PacketFunctions/PacketFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/PacketFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/IncomingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/IncomingPacketData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/JailPacketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Services/JailPacketService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/OutgoingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/OutgoingPacketData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Factory/PacketConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/PacketsFactory.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/DeltaTime.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/Time/DeltaTime.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/LittleByteBuffer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/Buffers/LittleByteBuffer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Utils/Utils.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Entities/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Entities/JailPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/IncomingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/IncomingPacketData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/LocalPlayerSyncPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Handlers/LocalPlayerSyncPacket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Vector3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Vector3.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPPacket.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -206,7 +184,14 @@
       <option name="project" value="LOCAL" />
       <updated>1756413689633</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Reorganized project structure. Added gameplay state machine (Spectator, Spawn, Death) to fix data races in UPS. Fixed TPS of player sync at client.">
+      <created>1756574888185</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1756574888185</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -246,6 +231,8 @@
     <MESSAGE value="Fixed bugs in the client code and added time out. Improved RTT system (fixed dos on 0 RTT) and synchronized Unity Physics Server with Java server (UPS now work in 64+- fps and every frame controlled by java server)" />
     <MESSAGE value="Added initializer pools in UPS (Unity Physics Server). Added create player at UPS and delete him. Added JailPlayerFactory to create players. Added new message type for notify engine about disconnect player. New 'InnerException' packet. Added new values to JailPlayer (unityInstanceID, nickname, Vector3 position) and new functions addPlayerData, deletePlayerData." />
     <MESSAGE value="Added client player sync. Todo: add delay between creation a player instance in UPS and sends client player sync. Fix sync tick count per second at client, and add protection from unauthorized access." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added client player sync. Todo: add delay between creation a player instance in UPS and sends client player sync. Fix sync tick count per second at client, and add protection from unauthorized access." />
+    <MESSAGE value="Reorganized project structure. Added gameplay state machine (Spectator, Spawn, Death) to fix data races in UPS. Fixed TPS of player sync at client." />
+    <MESSAGE value="Edited local player sync between player and server (now client send inputs and server calculate player coordinates). TODO: Add sync between server and player coordinates at client. Fix jumps. ADD Cache reflected + annotation system for automatic serialize packets;" />
+    <option name="LAST_COMMIT_MESSAGE" value="Edited local player sync between player and server (now client send inputs and server calculate player coordinates). TODO: Add sync between server and player coordinates at client. Fix jumps. ADD Cache reflected + annotation system for automatic serialize packets;" />
   </component>
 </project>

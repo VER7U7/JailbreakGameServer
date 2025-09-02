@@ -97,18 +97,29 @@ public abstract class IncomingPacketData {
     }
 
     public static class IncomingLocalPlayerSync extends IncomingPacketData {
-        public Vector3 playerPosition;
-        public Vector3 playerVelocity;
-        public Quaternion playerRotation;
+
+        public int tick;
+        public Vector3 cameraPos = new Vector3();
+        public Quaternion cameraRot = new Quaternion();
+        public float offsetZ = 0f;
+        public float horizontal = 0f;
+        public float vertical = 0f;
+        public boolean jumpDown = false;
+        public boolean sprintDown = false;
 
         public IncomingLocalPlayerSync() { super(IncomingPacketType.LocalPlayerSync); }
 
         @Override
         public void Deserialize(NetworkPacket packet) {
             ByteBuffer buffer = LittleByteBuffer.wrap(packet.getData());
-            playerPosition = new Vector3(buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
-            playerVelocity = new Vector3(buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
-            playerRotation = new Quaternion(buffer.getFloat(), buffer.getFloat(), buffer.getFloat(), buffer.getFloat());
+            tick = buffer.getInt();
+            cameraPos.fromBytes(buffer);
+            cameraRot.fromBytes(buffer);
+            offsetZ = buffer.getFloat();
+            horizontal = buffer.getFloat();
+            vertical = buffer.getFloat();
+            jumpDown = buffer.get() != 0;
+            sprintDown = buffer.get() != 0;
         }
     }
 }

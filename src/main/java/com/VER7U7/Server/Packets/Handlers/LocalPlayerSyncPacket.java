@@ -31,9 +31,13 @@ public class LocalPlayerSyncPacket implements PacketFunction{
         if (System.nanoTime() - player.nsLastLocalPlayerSyncTime <= JailConstants.NS_PER_SYNC_RATE)
             return;
 
+        if (syncPacket.tick <= player.localPosSyncTick)
+            return;
 
-        if (physicsController.playerClientSync(syncPacket, player))
+        if (physicsController.playerClientSync(syncPacket, player)) {
+            player.localPosSyncTick = syncPacket.tick;
             player.nsLastLocalPlayerSyncTime = System.nanoTime();
+        }
     }
 
     @Override
