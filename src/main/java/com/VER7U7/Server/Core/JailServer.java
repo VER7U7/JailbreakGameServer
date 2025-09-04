@@ -14,6 +14,7 @@ import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.VER7U7.Main.*;
@@ -86,13 +87,14 @@ public class JailServer extends Thread {
                         System.out.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
                         actualTicks = 0;
                         lastTickRateTime = now;
-
-
                     }
 
                     //--- START TICK PROCESSING ---
                     ticksCount++;
+
                     processIncomingMessages();
+                    sendAuthoritativeData();
+
                     physicController.endTickSignal(ticksCount);
 
                     if (System.nanoTime() - lastTickTime > NS_PER_SERVER_TICK) {
@@ -110,6 +112,28 @@ public class JailServer extends Thread {
             }
         }catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private void sendAuthoritativeData() {
+        //Sync playing data (local player)
+        for (Map.Entry<Integer, JailPlayer> player : jailPools.playersPool.entrySet()) {
+            JailPlayer jailPlayer = player.getValue();
+
+            if (jailPlayer.ticksTimeoutToSync > 0) {
+                jailPlayer.ticksTimeoutToSync--;
+                continue;
+            }
+
+            if (jailPlayer.state != JailPlayer.PlayerState.PlayerAlive &&
+                jailPlayer.unityInstanceID != 0)
+                continue;
+
+            physicController.playerSync(jailPlayer);
+            OutgoingPlayerSyncPacket outgoingPacket = new OutgoingPlayerSyncPacket(
+                    jailPlayer.position, jailPlayer.velocity, jailPlayer.rotation, jailPlayer.jumpDelayTime, jailPlayer.isGrounded
+            );
+            playersNetwork.addPacketToOutgoing(outgoingPacket.Serialize(), 0, player.getKey());
         }
     }
 
@@ -152,7 +176,7 @@ public class JailServer extends Thread {
                                 +"; y: "+ player.position.y +"; z: " + player.position.z + ")");
 
                         player.state = JailPlayer.PlayerState.PlayerAlive;
-
+                        player.ticksTimeoutToSync = 1;
                         player.playingTeam = BasicRules.Team.Prisoner;
                         playersNetwork.addPacketToOutgoing(
                                 new OutgoingSpawnPacket(BasicRules.Team.Prisoner.getID(),

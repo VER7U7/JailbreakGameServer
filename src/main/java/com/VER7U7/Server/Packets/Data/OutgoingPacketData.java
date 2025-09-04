@@ -204,4 +204,41 @@ public abstract class OutgoingPacketData {
         }
     }
 
+    public static class OutgoingPlayerSyncPacket extends OutgoingPacketData {
+
+        public Vector3 playerPosition;
+        public Vector3 playerVelocity;
+        public Quaternion playerRotation;
+        public float jumpDelayTime;
+        public boolean isGrounded;
+
+        public OutgoingPlayerSyncPacket() {
+            super(OutgoingPacketType.PlayerSync);
+        }
+
+        public OutgoingPlayerSyncPacket(Vector3 position, Vector3 velocity, Quaternion rotation,
+                                        float jumpDelayTime, boolean isGrounded) {
+            this();
+            this.playerPosition = position;
+            this.playerVelocity = velocity;
+            this.playerRotation = rotation;
+            this.jumpDelayTime = jumpDelayTime;
+            this.isGrounded = isGrounded;
+        }
+
+        @Override
+        public NetworkPacket Serialize() {
+            return new NetworkPacket(
+                    LittleByteBuffer.allocate(Float.BYTES * 3 + Float.BYTES * 3 + Float.BYTES * 4 + 5)
+                            .put(playerPosition.getBytes())
+                            .put(playerVelocity.getBytes())
+                            .put(playerRotation.getBytes())
+                            .putFloat(jumpDelayTime)
+                            .put((byte) (isGrounded ? 1 : 0))
+                            .array(),
+                    this.type.getID()
+            );
+        }
+    }
+
 }

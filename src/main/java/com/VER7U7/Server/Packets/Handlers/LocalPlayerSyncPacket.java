@@ -17,7 +17,7 @@ public class LocalPlayerSyncPacket implements PacketFunction{
 
     @Override
     public void process(int playerID, NetworkPacket networkPacket) {
-        IncomingLocalPlayerSync syncPacket = new IncomingLocalPlayerSync();
+        IncomingLocalInputSync syncPacket = new IncomingLocalInputSync();
         syncPacket.Deserialize(networkPacket);
 
         JailPlayer player = jailPools.playersPool.get(playerID);
@@ -31,11 +31,11 @@ public class LocalPlayerSyncPacket implements PacketFunction{
         if (System.nanoTime() - player.nsLastLocalPlayerSyncTime <= JailConstants.NS_PER_SYNC_RATE)
             return;
 
-        if (syncPacket.tick <= player.localPosSyncTick)
+        if (syncPacket.tick <= player.localInputSyncTick)
             return;
 
-        if (physicsController.playerClientSync(syncPacket, player)) {
-            player.localPosSyncTick = syncPacket.tick;
+        if (physicsController.inputClientSync(syncPacket, player)) {
+            player.localInputSyncTick = syncPacket.tick;
             player.nsLastLocalPlayerSyncTime = System.nanoTime();
         }
     }
@@ -44,6 +44,6 @@ public class LocalPlayerSyncPacket implements PacketFunction{
     public IncomingPacketType initialize(FunctionGlobalArgs globalArgs) {
         jailPools = globalArgs.jailPools;
         physicsController = globalArgs.physicsController;
-        return IncomingPacketType.LocalPlayerSync;
+        return IncomingPacketType.LocalInputSync;
     }
 }

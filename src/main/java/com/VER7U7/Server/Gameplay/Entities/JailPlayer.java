@@ -12,6 +12,7 @@ public class JailPlayer {
     //Runtime
     public short playerID;
     public int unityInstanceID;
+    public int ticksTimeoutToSync;
 
     public PlayerState state;
 
@@ -22,10 +23,15 @@ public class JailPlayer {
     public String nickname;
 
     //Transform
-    public int localPosSyncTick = 0;
+    public int localInputSyncTick = 0;
+
+        //player
     public Vector3 position = new Vector3();
     public Vector3 velocity = new Vector3();
     public Quaternion rotation = new Quaternion();
+    public float jumpDelayTime;
+    public boolean isGrounded = false;
+        //camera
     public Vector3 cameraPosition = new Vector3();
     public Quaternion cameraRotation = new Quaternion();
     public float cameraOffsetZ = 0f; //its distance between player body (or camera target) and player camera.
@@ -58,11 +64,11 @@ public class JailPlayer {
                 .array();
     }
 
-    public byte[] clientPlayerSyncData(
+    public byte[] clientInputSyncData(
             Vector3 camPos, Quaternion camRot, float offsetZ,
             float horizontal, float vertical, boolean jumpDown, boolean sprintDown) {
         return LittleByteBuffer.allocate(4 + Float.BYTES * 7 + Float.BYTES * 3 + 2)
-                .putShort((short) PlayerUpdateType.ClientSyncPlayer.getID())
+                .putShort((short) PlayerUpdateType.ClientSyncInput.getID())
                 .putShort(playerID)
 
                 .put(camPos.getBytes())
@@ -72,6 +78,13 @@ public class JailPlayer {
                 .putFloat(vertical)
                 .put((byte) (jumpDown ? 1 : 0))
                 .put((byte) (sprintDown ? 1 : 0))
+                .array();
+    }
+
+    public byte[] playerSyncData() {
+        return LittleByteBuffer.allocate(4)
+                .putShort((short) PlayerUpdateType.PlayerSync.getID())
+                .putShort(playerID)
                 .array();
     }
 
@@ -101,7 +114,8 @@ public class JailPlayer {
     public enum PlayerUpdateType {
         AddPlayer(1),
         DeletePlayer(2),
-        ClientSyncPlayer(3);
+        ClientSyncInput(3),
+        PlayerSync(4);
 
         private int value;
 

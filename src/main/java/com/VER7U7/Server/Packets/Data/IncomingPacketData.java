@@ -96,7 +96,7 @@ public abstract class IncomingPacketData {
         }
     }
 
-    public static class IncomingLocalPlayerSync extends IncomingPacketData {
+    public static class IncomingLocalInputSync extends IncomingPacketData {
 
         public int tick;
         public Vector3 cameraPos = new Vector3();
@@ -107,7 +107,7 @@ public abstract class IncomingPacketData {
         public boolean jumpDown = false;
         public boolean sprintDown = false;
 
-        public IncomingLocalPlayerSync() { super(IncomingPacketType.LocalPlayerSync); }
+        public IncomingLocalInputSync() { super(IncomingPacketType.LocalInputSync); }
 
         @Override
         public void Deserialize(NetworkPacket packet) {

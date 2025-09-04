@@ -1,7 +1,6 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
-import com.VER7U7.Server.Types.Vector3;
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
@@ -60,8 +59,8 @@ public class JUPPController {
         return false;
     }
 
-    public boolean playerClientSync(IncomingLocalPlayerSync origSyncPacket, JailPlayer player) {
-        JUPPPacket outPacket = new JUPPPacket(player.clientPlayerSyncData(
+    public boolean inputClientSync(IncomingLocalInputSync origSyncPacket, JailPlayer player) {
+        JUPPPacket outPacket = new JUPPPacket(player.clientInputSyncData(
                 origSyncPacket.cameraPos,
                 origSyncPacket.cameraRot,
                 origSyncPacket.offsetZ,
@@ -72,13 +71,30 @@ public class JUPPController {
                 JuppOutgoingCommands.UpdatePlayer.getID());
 
         JUPPPacket physicsAnswer = engine.sendWithResult(outPacket);
-        ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData()); //status, vector3, vector3, quaternion;
+        ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData()); //status
+        if (buffer.get() == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean playerSync(JailPlayer player) {
+        JUPPPacket outPacket = new JUPPPacket(
+                player.playerSyncData(),
+                JuppOutgoingCommands.UpdatePlayer.getID());
+
+        JUPPPacket physicsAnswer = engine.sendWithResult(outPacket);
+        ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData());
         if (buffer.get() == 1) {
             player.position.fromBytes(buffer);
             player.velocity.fromBytes(buffer);
             player.rotation.fromBytes(buffer);
-            player.cameraPosition = origSyncPacket.cameraPos;
-            player.cameraRotation = origSyncPacket.cameraRot;
+            player.jumpDelayTime = buffer.getFloat();
+            player.isGrounded = buffer.get() != 0;
+
+            player.cameraPosition.fromBytes(buffer);
+            player.cameraRotation.fromBytes(buffer);
+            player.cameraOffsetZ = buffer.getFloat();
             return true;
         }
         return false;

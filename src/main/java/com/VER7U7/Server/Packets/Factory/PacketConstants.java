@@ -10,7 +10,7 @@ public class PacketConstants {
         Ping(7, false),
         ConfirmASK(8, false),
 
-        LocalPlayerSync(12, false),
+        LocalInputSync(12, false),
 
         Disconnect(255, false);
 
@@ -46,6 +46,8 @@ public class PacketConstants {
 
         PlayerMove(10, false),
         ChatMessage(11, true),
+
+        PlayerSync(12, false),
 
         ClientSpectator(13, true),
         ClientSpawn(14, true),
