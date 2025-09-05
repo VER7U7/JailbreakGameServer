@@ -5,18 +5,20 @@ import com.VER7U7.UnityPhysics.JUPP.*;
 
 public class Main {
     public static JUPPEngine physicsEngine;
+    public static JailServer jailServer;
+
     public static int PLAYER_NETWORK_PORT = 5000;
     public static int SERVICE_NETWORK_PORT = 8787;
     public static int JUBB_NETWORK_PORT = 6767;
 
     public static void main(String[] args) throws InterruptedException, JUPPExceptions.VersionNotMatch {
-        physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT);
+        jailServer = new JailServer();
+        physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT, () -> jailServer.restartCallback() );
+
         physicsEngine.Start();
 
-        JailServer jailServer = new JailServer();
         jailServer.StartSimulation();
-        jailServer.join();
 
-        physicsEngine.Close();
+        physicsEngine.Join();
     }
 }

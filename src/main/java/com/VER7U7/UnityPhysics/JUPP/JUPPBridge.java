@@ -108,11 +108,10 @@ public class JUPPBridge {
                 break;
             }finally {
                 closeResources();
-                JUPPLog.println("Connection fully closed.");
+                JUPPLog.println("Unity Physics Server fully closed the connection. Trying to reconnect...");
                 bridgeStatus = JUPPCommons.BridgeStatus.BridgeStarted; // Сброс статуса
                 outgoingMessageQueue.clear();
                 incomingMessageQueue.clear();
-                restartCallback.run();
             }
         }
     }
@@ -158,6 +157,7 @@ public class JUPPBridge {
                     handleIncomingPacket(data);
                 } catch(EOFException e) {
                     JUPPLog.println("[Client] Disconnected gracefully (EOF).");
+                    restartCallback.run();
                     break;
                 } catch (SocketException se) {
                     JUPPLog.println("[Client] Socket Error: " + se.getMessage());
@@ -170,7 +170,7 @@ public class JUPPBridge {
                 }
             }
         } finally {
-            JUPPLog.println("JUPPReaderThread is stopped.");
+            //JUPPLog.println("JUPPReaderThread is stopped.");
             if (!writerThread.isInterrupted())
                 writerThread.interrupt();
         }
@@ -205,9 +205,9 @@ public class JUPPBridge {
             }
         } catch(InterruptedException e) {
             Thread.currentThread().interrupt();
-            JUPPLog.println("JUPPWriterThread interrupted.");
+            //JUPPLog.println("JUPPWriterThread interrupted.");
         } finally {
-            JUPPLog.println("JUPPWriterThread is stopped.");
+            //JUPPLog.println("JUPPWriterThread is stopped.");
             if (!readerThread.isInterrupted())
                 readerThread.interrupt();
         }

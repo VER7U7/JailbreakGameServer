@@ -8,6 +8,7 @@ import com.VER7U7.Server.Gameplay.EntityFactories.JailPlayerFactory;
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 import com.VER7U7.Server.Packets.Handlers.FunctionGlobalArgs;
 import com.VER7U7.Server.Packets.Services.JailPacketService;
+import com.VER7U7.UnityPhysics.JUPP.JUPPCommons;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
 import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
 
@@ -22,7 +23,7 @@ import static com.VER7U7.Server.Core.JailConstants.*;
 import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 import static com.VER7U7.Server.Packets.Data.OutgoingPacketData.*;
 
-public class JailServer extends Thread {
+public class JailServer {
 
     private JUPPController physicController;
     private JailPools jailPools;
@@ -32,6 +33,7 @@ public class JailServer extends Thread {
     private NetworkEngine playersNetwork;
 
     /* RUNTIME */
+    private Thread processThread;
     public AtomicBoolean serverRunning = new AtomicBoolean(false);
 
     /* TICKS */
@@ -56,7 +58,8 @@ public class JailServer extends Thread {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.start();
+        processThread = new Thread(this::run);
+        processThread.start();
     }
 
     public boolean hasServerAvailable() {
@@ -65,17 +68,37 @@ public class JailServer extends Thread {
 
     public void StopSimulation() {
         serverRunning.set(false);
-        this.interrupt();
-        playersNetwork.StopNetwork();
+
+        processThread.interrupt();
+        processThread = null;
+
+        if (playersNetwork != null) {
+            playersNetwork.DisableShutdownHook();
+            playersNetwork.StopNetwork();
+        }
     }
 
-    @Override
+    public void restartCallback() {
+        if (serverRunning.get()) {
+            JailLogging.println("Restarting server");
+
+            StopSimulation();
+            StartSimulation();
+        }
+    }
+
     public void run() {
         //initialize
+
         physicController.setupPools((short)SERVER_MAX_PLAYERS);
 
         try {
-            while(true) {
+            while(serverRunning.get()) {
+                if (physicsEngine.getBridgeStatus() == JUPPCommons.BridgeStatus.BridgeStarted) {
+                    Thread.sleep(1000);
+                    continue;
+                }
+
                 long now = System.nanoTime();
                 long elapsedTime = now - lastTickTime;
 
@@ -84,7 +107,7 @@ public class JailServer extends Thread {
 
                     actualTicks++;
                     if (now - lastTickRateTime >= 1_000_000_000L) {
-                        System.out.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
+                        JailLogging.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
                         actualTicks = 0;
                         lastTickRateTime = now;
                     }
@@ -108,8 +131,9 @@ public class JailServer extends Thread {
                         Thread.sleep(sleepTimeMs, sleepTimeNsRemainder);
                     }
                 }
-
             }
+
+
         }catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }

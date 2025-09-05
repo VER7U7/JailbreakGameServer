@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -43,7 +44,7 @@ public class NetworkEngine extends Thread {
 
     public AtomicBoolean networkReady = new AtomicBoolean(false);
     private Runnable callbackSessionTimeout;
-
+    private Thread shutdownCallback;
     public JailPools jailPools;
 
     public NetworkEngine(int port) {
@@ -71,12 +72,23 @@ public class NetworkEngine extends Thread {
         this.start();
         networkReady.set(true);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownServer));
+        shutdownCallback = new Thread(this::StopNetwork);
+        Runtime.getRuntime().addShutdownHook(shutdownCallback);
         return this;
     }
 
-    private void shutdownServer() {
-        System.out.println("Hook is ready");
+    public boolean getNetworkAvailable() {
+        return networkReady.get();
+    }
+
+    public void DisableShutdownHook() {
+        Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+    }
+
+    public void StopNetwork() {
+        this.networkReady.set(false);
+
+        NetworkLog.println("Network shutdown");
         try {
             if (networkReady.get()) {
                 OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(DisconnectReason.ClientDisconnect);
@@ -86,19 +98,17 @@ public class NetworkEngine extends Thread {
                     channel.send(disconnectPacket.Serialize().getFormattedDataBuffer(), entry.getValue().getClientAddress());
                     disconnectPlayer(entry.getValue().getClientAddress(), DisconnectReason.ClientDisconnect);
                 }
-                StopNetwork();
             }
         }catch(IOException e) {
             e.printStackTrace();
         }
-    }
 
-    public boolean getNetworkAvailable() {
-        return networkReady.get();
-    }
-
-    public void StopNetwork() {
-        this.networkReady.set(false);
+        try {
+            channel.close();
+            selector.close();
+        }catch(IOException e) {
+            e.printStackTrace();
+        }
         this.interrupt();
     }
 
@@ -148,7 +158,9 @@ public class NetworkEngine extends Thread {
 
                 checkSessionTimeouts();
                 processWaitConfirmationPackets();
-            }catch (IOException e) {
+            }
+            catch (ClosedSelectorException ignore) { }
+            catch (IOException e) {
                 e.printStackTrace();
             }
         }

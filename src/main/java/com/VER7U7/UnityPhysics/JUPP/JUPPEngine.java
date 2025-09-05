@@ -1,6 +1,7 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
 import java.net.SocketException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,12 +21,18 @@ public class JUPPEngine {
     private Thread updateThread;
     private AtomicBoolean hasRunning = new AtomicBoolean(false);
     private Random rand;
+    private Runnable externalRestartCallback;
     //private static final Map<Integer, JUPPPacket> resultWaitingPool = new LinkedHashMap<>();
     private static final ConcurrentHashMap<Integer, CompletableFuture<JUPPPacket>> resultWaitingPool = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Integer, JUPPPacket> incomingPacketsPool = new ConcurrentHashMap<>();
 
     public JUPPEngine(int port) {
         this.port = (short)port;
+    }
+
+    public JUPPEngine(int port, Runnable externalRestartCallback) {
+        this(port);
+        this.externalRestartCallback = externalRestartCallback;
     }
 
     public void Start() throws JUPPExceptions.VersionNotMatch {
@@ -69,6 +76,14 @@ public class JUPPEngine {
         return hasRunning.get();
     }
 
+    public void Join() {
+        try {
+            updateThread.join();
+        }catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void Close() {
         hasRunning.set(false);
         for (Map.Entry<Integer, CompletableFuture<JUPPPacket>> entry : resultWaitingPool.entrySet()) {
@@ -88,9 +103,16 @@ public class JUPPEngine {
         }
         resultWaitingPool.clear();
         incomingPacketsPool.clear();
+
+        if (externalRestartCallback != null)
+            externalRestartCallback.run();
     }
 
-    public JUPPPacket sendWithResult(JUPPPacket outPacket) {
+    public BridgeStatus getBridgeStatus() {
+        return bridge.getBridgeStatus();
+    }
+
+    public JUPPPacket sendWithResult(JUPPPacket outPacket) throws CancellationException {
         int transferID = 1;
         while(resultWaitingPool.containsKey(transferID) || incomingPacketsPool.containsKey(transferID)) {
             transferID = rand.nextInt(Integer.MAX_VALUE);
@@ -105,7 +127,7 @@ public class JUPPEngine {
         } catch(SocketException e) {
             e.printStackTrace();
         }catch (CancellationException ce) {
-            return null;
+            throw new CancellationException();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             JUPPLog.errprintnln(Thread.currentThread().getName() + " is interrupted.");
@@ -133,6 +155,13 @@ public class JUPPEngine {
         try {
             while(!bridge.getBridgeStatus().equals(JUPPCommons.BridgeStatus.BridgeStopped)
                     && !bridge.getBridgeStatus().equals(JUPPCommons.BridgeStatus.BridgeError)) {
+                if (bridge.getBridgeStatus().equals(BridgeStatus.BridgeStarted)) {
+                    for (CompletableFuture<JUPPPacket> handler : resultWaitingPool.values()) {
+                        handler.cancel(true);
+                    }
+                }
+
+
                 JUPPPacket packet = bridge.receivePacket(); //wait packet
                 if (packet == null)
                     continue;
