@@ -34,4 +34,21 @@ public class JUPPExceptions {
             super(cause);
         }
     }
+
+    public static class PhysicsError extends Exception {
+        public PhysicsError() {
+            super();
+        }
+
+        public PhysicsError(String message) {
+            super(message);
+        }
+
+        public PhysicsError(String message, Throwable cause) {
+            super(message, cause);
+        }
+        public PhysicsError(Throwable cause) {
+            super(cause);
+        }
+    }
 }

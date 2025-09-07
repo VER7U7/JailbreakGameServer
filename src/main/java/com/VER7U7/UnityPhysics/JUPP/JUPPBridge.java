@@ -1,6 +1,8 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
@@ -13,6 +15,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JUPPBridge {
+    private static final Logger LOGGER = LogManager.getLogger(JUPPBridge.class);
+
+
     private final short port;
     private final AtomicBoolean bridgeRunning = new AtomicBoolean(true);
 
@@ -37,7 +42,7 @@ public class JUPPBridge {
     }
 
     public void startConnection() {
-        updateConnectionThread = new Thread(this::updateConnectionLoop, "ConnectionManagerThread");
+        updateConnectionThread = new Thread(this::updateConnectionLoop, "JUPPConnectionThread");
         updateConnectionThread.start();
     }
 
@@ -49,7 +54,7 @@ public class JUPPBridge {
                 socket.close();
             }
         }catch(IOException e) {
-            JUPPLog.errprintnln("Error closing socket during stop: " + e.getMessage());
+            LOGGER.error("Error closing socket during stop: ", e);
         }
     }
 
@@ -58,7 +63,7 @@ public class JUPPBridge {
             outgoingMessageQueue.put(packet);
         }catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            JUPPLog.errprintnln("Send Packet interrupted: " + e.getMessage());
+            LOGGER.error("Send Packet interrupted: ", e);
         }
     }
 
@@ -79,7 +84,7 @@ public class JUPPBridge {
         while (bridgeRunning.get()) {
             try {
                 socket = new Socket("localhost", port);
-                JUPPLog.println("Connected to Unity at " + socket.getRemoteSocketAddress());
+                LOGGER.info("Connected to Unity at {}", socket.getRemoteSocketAddress());
                 bridgeStatus = JUPPCommons.BridgeStatus.BridgeConnected;
 
                 dis = new DataInputStream(socket.getInputStream());
@@ -94,21 +99,21 @@ public class JUPPBridge {
                 readerThread.join();
                 writerThread.join();
             }catch (IOException ioe) {
-                JUPPLog.println("Waiting for unity server... (" + ioe.getMessage() + ")");
+                LOGGER.info("Waiting for unity server... ({})", ioe.getMessage());
                 try {
                     Thread.sleep(5000);
                 } catch(InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    JUPPLog.println("Connection manager interrupted while waiting.");
+                    LOGGER.error("Connection manager interrupted while waiting.");
                 }
             }catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                JUPPLog.println("Connection manager interrupted while joining threads.");
+                LOGGER.error("Connection manager interrupted while joining threads.");
                 bridgeStatus = JUPPCommons.BridgeStatus.BridgeError;
                 break;
             }finally {
                 closeResources();
-                JUPPLog.println("Unity Physics Server fully closed the connection. Trying to reconnect...");
+                LOGGER.error("Unity Physics Server fully closed the connection. Trying to reconnect...");
                 bridgeStatus = JUPPCommons.BridgeStatus.BridgeStarted; // Сброс статуса
                 outgoingMessageQueue.clear();
                 incomingMessageQueue.clear();
@@ -122,7 +127,7 @@ public class JUPPBridge {
             if (dos != null) dos.close();
             if (socket != null && !socket.isClosed()) socket.close();
         }catch (IOException e) {
-            JUPPLog.errprintnln("Error closing resources: " + e.getMessage());
+            LOGGER.error("Error closing resources: ", e);
         } finally {
             dis = null;
             dos = null;
@@ -156,16 +161,15 @@ public class JUPPBridge {
 
                     handleIncomingPacket(data);
                 } catch(EOFException e) {
-                    JUPPLog.println("[Client] Disconnected gracefully (EOF).");
+                    LOGGER.error("[JUPP] Disconnected gracefully (EOF).");
                     restartCallback.run();
                     break;
                 } catch (SocketException se) {
-                    JUPPLog.println("[Client] Socket Error: " + se.getMessage());
-                    se.printStackTrace();
-                    JUPPLog.println("[Client] Connection unexpectedly lost.");
+                    LOGGER.error("[JUPP] Socket Error: ", se);
+                    LOGGER.error("[JUPP] Connection unexpectedly lost.");
                     break;
                 } catch (IOException ioe) {
-                    JUPPLog.println("[Client] IO Error: " + ioe.getMessage());
+                    LOGGER.error("[Client] IO Error: ", ioe);
                     break;
                 }
             }
@@ -195,11 +199,11 @@ public class JUPPBridge {
 
                     //JUPPLog.println("Packet with id {" + packet.packetID + "} sent successfully.");
                 }catch (SocketException se) {
-                    JUPPLog.errprintnln("[Client] Socket Error in write loop: " + se.getMessage());
-                    JUPPLog.errprintnln("[Client] Connection unexpectedly lost during write.");
+                    LOGGER.error("[Client] Socket Error in write loop: ", se);
+                    LOGGER.error("[Client] Connection unexpectedly lost during write.");
                     break;
                 } catch(IOException e) {
-                    JUPPLog.errprintnln("[Client] IO Error in write loop: " + e.getMessage());
+                    LOGGER.error("[Client] IO Error in write loop: ", e);
                     break;
                 }
             }

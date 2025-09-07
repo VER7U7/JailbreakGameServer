@@ -2,20 +2,29 @@ package com.VER7U7.UnityPhysics.JUPP;
 
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeoutException;
 
 import static com.VER7U7.UnityPhysics.JUPP.JUPPCommons.*;
 
 public class JUPPController {
+    private static final Logger LOGGER = LogManager.getLogger(JUPPController.class);
+
 
     private JUPPEngine engine;
 
-    public JUPPController(JUPPEngine engine) {
+    public JUPPController() {}
+
+    public JUPPController setPhysicsEngine(JUPPEngine engine) {
         this.engine = engine;
+        return this;
     }
 
     /* DANGER!!!!!!!
@@ -28,10 +37,10 @@ public class JUPPController {
                     .putShort(playerPoolSize)
                     .array();
             JUPPPacket outPacket = new JUPPPacket(data, JuppOutgoingCommands.SetupPools.getID());
-            JUPPPacket incomingPacket = engine.sendWithResult(outPacket);
+            JUPPPacket incomingPacket = engine.sendWithResultTimer(outPacket, 200);
             ByteBuffer buffer = LittleByteBuffer.wrap(incomingPacket.getData());
-            JUPPLog.println("Pools initialized with: playerPool(" + buffer.getShort() + ")");
-        }catch(CancellationException e) {
+            LOGGER.debug("Pools initialized with: playerPool({})",  buffer.getShort());
+        }catch(CancellationException | TimeoutException e) {
             return false;
         }
         return true;
@@ -45,7 +54,7 @@ public class JUPPController {
                 ByteBuffer buffer = LittleByteBuffer.wrap(incomingPacket.getData());
                 player.unityInstanceID = buffer.getInt();
                 if (player.unityInstanceID == -1) {
-                    JUPPLog.println("Error with adding player(" + player.playerID + ")");
+                    LOGGER.error("Error with adding player({})", player.playerID);
                     return false;
                 }
                 player.position.x = buffer.getFloat();

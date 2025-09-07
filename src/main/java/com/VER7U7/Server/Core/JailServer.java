@@ -10,7 +10,10 @@ import com.VER7U7.Server.Packets.Handlers.FunctionGlobalArgs;
 import com.VER7U7.Server.Packets.Services.JailPacketService;
 import com.VER7U7.UnityPhysics.JUPP.JUPPCommons;
 import com.VER7U7.UnityPhysics.JUPP.JUPPController;
-import com.VER7U7.UnityPhysics.JUPP.JUPPLog;
+import com.VER7U7.UnityPhysics.JUPP.JUPPEngine;
+import com.VER7U7.UnityPhysics.JUPP.JUPPExceptions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,8 +27,14 @@ import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 import static com.VER7U7.Server.Packets.Data.OutgoingPacketData.*;
 
 public class JailServer {
+    private static final Logger LOGGER = LogManager.getLogger(JailServer.class);
 
+    //JUPP
+    private JUPPEngine physicsEngine;
     private JUPPController physicController;
+    private JailPhysicsStatus physicsStatus = JailPhysicsStatus.NeedInitializePhysics;
+
+    //CORE
     private JailPools jailPools;
     private JailPacketService jailPacketService;
 
@@ -42,24 +51,33 @@ public class JailServer {
     private long lastTickTime = System.nanoTime();
     private long lastTickRateTime = System.nanoTime();
 
-    public JailServer() {
-
+    public JailServer() throws IOException {
+        LOGGER.info("Initializing server {}", SERVER_VERSION_TEXT);
+        Initialize();
     }
 
-    public void StartSimulation() {
-        serverRunning.set(true);
-        try {
-            jailPools = new JailPools().InitializePools();
+    public void Initialize() throws IOException {
+        jailPools = new JailPools().InitializePools();
+        playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork(jailPools);
+        physicController = new JUPPController();
+        jailPacketService = new JailPacketService(new FunctionGlobalArgs(this, physicController, playersNetwork, jailPools));
+    }
 
-            playersNetwork = new NetworkEngine(PLAYER_NETWORK_PORT).StartNetwork();
-            playersNetwork.jailPools = jailPools;
-            physicController = new JUPPController(physicsEngine);
-            jailPacketService = new JailPacketService(new FunctionGlobalArgs(this, physicController, playersNetwork, jailPools));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        processThread = new Thread(this::run);
+    public void InitializePhysics() throws JUPPExceptions.PhysicsError {
+        if (!physicController.setupPools((short)SERVER_MAX_PLAYERS))
+            throw new JUPPExceptions.PhysicsError("Setup pools error");
+    }
+
+    public void StartSimulation() throws JUPPExceptions.VersionNotMatch {
+        serverRunning.set(true);
+
+        physicsEngine = new JUPPEngine(JUBB_NETWORK_PORT, () -> { restartCallback(); });
+        physicsEngine.Start();
+        physicController.setPhysicsEngine(physicsEngine);
+
+        processThread = new Thread(this::run, "JailServerThread");
         processThread.start();
+        LOGGER.info("Server has been started {}", SERVER_VERSION_TEXT);
     }
 
     public boolean hasServerAvailable() {
@@ -80,62 +98,85 @@ public class JailServer {
 
     public void restartCallback() {
         if (serverRunning.get()) {
-            JailLogging.println("Restarting server");
+            LOGGER.warn("Restarting physics server");
+            physicsStatus = JailPhysicsStatus.NeedInitializePhysics;
+            try {
+                if (playersNetwork != null) {
+                    playersNetwork.DisableShutdownHook();
+                    playersNetwork.StopNetwork();
+                }
 
-            StopSimulation();
-            StartSimulation();
+                Initialize();
+            }catch(IOException e) {
+                LOGGER.fatal("Server cannot be restarted", e);
+            }
         }
     }
 
     public void run() {
-        //initialize
-
-        physicController.setupPools((short)SERVER_MAX_PLAYERS);
-
         try {
             while(serverRunning.get()) {
+                if (physicsStatus == JailPhysicsStatus.NeedInitializePhysics &&
+                    physicsEngine.getBridgeStatus() == JUPPCommons.BridgeStatus.BridgeConnected) {
+                    try {
+                        InitializePhysics();
+                    }catch(JUPPExceptions.PhysicsError e) {
+                        LOGGER.fatal("Physics cannot be initialized by: {}", e.getMessage());
+                        return;
+                    }
+                    physicsStatus = JailPhysicsStatus.PhysicsInitialized;
+                }
+
                 if (physicsEngine.getBridgeStatus() == JUPPCommons.BridgeStatus.BridgeStarted) {
                     Thread.sleep(1000);
                     continue;
                 }
 
-                long now = System.nanoTime();
-                long elapsedTime = now - lastTickTime;
-
-                if (elapsedTime >= NS_PER_SERVER_TICK) {
-                    lastTickTime += NS_PER_SERVER_TICK;
-
-                    actualTicks++;
-                    if (now - lastTickRateTime >= 1_000_000_000L) {
-                        JailLogging.println("Actual Tick Rate: " + actualTicks + " ticks/sec");
-                        actualTicks = 0;
-                        lastTickRateTime = now;
-                    }
-
-                    //--- START TICK PROCESSING ---
-                    ticksCount++;
-
-                    processIncomingMessages();
-                    sendAuthoritativeData();
-
-                    physicController.endTickSignal(ticksCount);
-
-                    if (System.nanoTime() - lastTickTime > NS_PER_SERVER_TICK) {
-                        lastTickTime = System.nanoTime();
-                    }
-                } else {
-                    long sleepTimeNs = NS_PER_SERVER_TICK - elapsedTime;
-                    long sleepTimeMs = sleepTimeNs / 1_000_000;
-                    int sleepTimeNsRemainder = (int) (sleepTimeMs % 1_000_000);
-                    if (sleepTimeMs > 0) {
-                        Thread.sleep(sleepTimeMs, sleepTimeNsRemainder);
-                    }
-                }
+                process(); //base logic of server
             }
-
-
         }catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    /*
+    * this function must be in loop, because its main server logic.
+    * in the function such process occur as: Ticks, Process Incoming Messages from
+    * network engine (packets from players), Send data to players for sync with server,
+    * Send updates to physics server etc. There is also a tickrate delay compensation system
+    * */
+    private void process() throws InterruptedException {
+        long now = System.nanoTime();
+        long elapsedTime = now - lastTickTime;
+
+        if (elapsedTime >= NS_PER_SERVER_TICK) {
+            lastTickTime += NS_PER_SERVER_TICK;
+
+            actualTicks++;
+            if (now - lastTickRateTime >= 1_000_000_000L) {
+                LOGGER.debug("Actual Tick Rate: {} ticks/sec", actualTicks);
+                actualTicks = 0;
+                lastTickRateTime = now;
+            }
+
+            //--- START TICK PROCESSING ---
+            ticksCount++;
+
+            processIncomingMessages();
+            sendAuthoritativeData();
+
+            physicController.endTickSignal(ticksCount);
+
+            if (System.nanoTime() - lastTickTime > NS_PER_SERVER_TICK) {
+                lastTickTime = System.nanoTime();
+            }
+        } else {
+            long sleepTimeNs = NS_PER_SERVER_TICK - elapsedTime;
+            long sleepTimeMs = sleepTimeNs / 1_000_000;
+            int sleepTimeNsRemainder = (int) (sleepTimeMs % 1_000_000);
+            if (sleepTimeMs > 0) {
+                Thread.sleep(sleepTimeMs, sleepTimeNsRemainder);
+            }
         }
     }
 
@@ -195,7 +236,7 @@ public class JailServer {
                     if (!physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.AddPlayer)) {
                         playersNetwork.addPacketToOutgoing(null, NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER, player.playerID);
                     } else {
-                        JUPPLog.println("Added " + player.nickname + " with instance(" + player.unityInstanceID +
+                        LOGGER.debug("Added " + player.nickname + " with instance(" + player.unityInstanceID +
                                 ") at position(x:"+ player.position.x
                                 +"; y: "+ player.position.y +"; z: " + player.position.z + ")");
 
@@ -215,7 +256,7 @@ public class JailServer {
                     JailPlayer player = jailPools.playersPool.get(incomingMessage.getPlayerID());
                     jailPools.DeletePlayer(player.playerID);
                     physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.DeletePlayer);
-                    JUPPLog.println("Removed " + player.nickname + " from the server.");
+                    LOGGER.debug("Removed " + player.nickname + " from the server.");
                 }
 
             } catch (Exception e) {

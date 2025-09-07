@@ -5,6 +5,9 @@ import com.VER7U7.Server.Network.Exceptions.IllegalPacketFormatException;
 import com.VER7U7.Server.Network.States.*;
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
+import com.VER7U7.UnityPhysics.JUPP.JUPPEngine;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -29,6 +32,9 @@ import static com.VER7U7.Server.Packets.Data.OutgoingPacketData.*;
 import static com.VER7U7.Server.Packets.Data.IncomingPacketData.*;
 
 public class NetworkEngine extends Thread {
+    private static final Logger LOGGER = LogManager.getLogger(NetworkEngine.class);
+
+
     private final int port;
     private Selector selector;
     private DatagramChannel channel;
@@ -45,7 +51,7 @@ public class NetworkEngine extends Thread {
     public AtomicBoolean networkReady = new AtomicBoolean(false);
     private Runnable callbackSessionTimeout;
     private Thread shutdownCallback;
-    public JailPools jailPools;
+    private JailPools jailPools;
 
     public NetworkEngine(int port) {
         this.port = port;
@@ -59,10 +65,14 @@ public class NetworkEngine extends Thread {
         this.incomingQueue = new ConcurrentLinkedQueue<>();
         this.outgoingQueue = new ConcurrentLinkedQueue<>();
 
-        NetworkLog.println("UDP Server started on port " + port);
+        this.setName("NetworkEngineThread");
+
+        LOGGER.info("UDP Server started on port {}", port);
     }
 
-    public NetworkEngine StartNetwork() throws IOException {
+    public NetworkEngine StartNetwork(JailPools jailPools) throws IOException {
+        this.jailPools = jailPools;
+
         this.selector = Selector.open();
         this.channel = DatagramChannel.open();
         this.channel.configureBlocking(false);
@@ -88,7 +98,7 @@ public class NetworkEngine extends Thread {
     public void StopNetwork() {
         this.networkReady.set(false);
 
-        NetworkLog.println("Network shutdown");
+        LOGGER.warn("Network shutdown");
         try {
             if (networkReady.get()) {
                 OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(DisconnectReason.ClientDisconnect);
@@ -241,7 +251,7 @@ public class NetworkEngine extends Thread {
         if (packet.getPacketId() == IncomingPacketType.Disconnect.getID()) {
             IncomingDisconnect disconnectPacket = new IncomingDisconnect(packet);
             disconnectPlayer(session.getClientAddress(), disconnectPacket.disconnectReason);
-            NetworkLog.println("Player disconnected by reason: " + disconnectPacket.disconnectReason.getText());
+            LOGGER.info("Player disconnected by reason: {}", disconnectPacket.disconnectReason.getText());
             return true;
         }
         return false;
@@ -340,7 +350,7 @@ public class NetworkEngine extends Thread {
 
                     OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess(newPlayerId);
                     channel.send(outgoingSuccess.Serialize().getFormattedDataBuffer(), socketAddress);
-                    NetworkLog.println("Added new player");
+                    LOGGER.info("Connected new player to the server ({})", socketAddress);
                 } else {
                     OutgoingDisconnect outgoing = new OutgoingDisconnect(DisconnectReason.WrongCode);
                     channel.send(outgoing.Serialize().getFormattedDataBuffer(), socketAddress);
@@ -413,14 +423,14 @@ public class NetworkEngine extends Thread {
                         e.printStackTrace();
                     }
                 } else {
-                    NetworkLog.errprintnln("Unknown session, may be client break connection.");
+                    LOGGER.error("Unknown session, may be client break connection.");
                 }
             } else if (outgoingMessage.getMessageType() == NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER) {
                 NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
                 if (session != null) {
                     disconnectPlayer(session.getClientAddress(), DisconnectReason.InnerException);
                 } else {
-                    NetworkLog.errprintnln("Unknown session, may be client break connection.");
+                    LOGGER.error("Unknown session, may be client break connection.");
                 }
             }
         }
@@ -519,7 +529,7 @@ public class NetworkEngine extends Thread {
             Map.Entry<SocketAddress, NetworkPlayerSession> entry = iterator.next();
             NetworkPlayerSession session = entry.getValue();
             if (currentTime - session.getLastSeenTimestamp() > NEJB_PLAYER_TIMEOUT_MS) {
-                NetworkLog.println("Session " + session.getClientAddress() + " has been closed by timeout.");
+                LOGGER.debug("Session " + session.getClientAddress() + " has been closed by timeout.");
                 //iterator.remove();
                 disconnectPlayer(session.getClientAddress(), DisconnectReason.TimeOut);
             }
@@ -531,7 +541,7 @@ public class NetworkEngine extends Thread {
                 Map.Entry<SocketAddress, ConnectionData> entry = connectIterator.next();
                 ConnectionData connectionData = entry.getValue();
                 if (currentTime - connectionData.getTimestamp() > 5_000) {
-                    NetworkLog.println("Non authed session has been closed by timeout.");
+                    LOGGER.debug("Non authed session has been closed by timeout.");
                     connectIterator.remove();
                 }
             }
