@@ -214,7 +214,8 @@ public class NetworkEngine extends Thread {
 
                 incomingQueue.add(new NetworkIncomingMessage(packet, networkIncomingType, session.getPlayerID()));
             }
-        }catch (IOException e) {
+        }catch(ClosedSelectorException ignore) {}
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -281,7 +282,7 @@ public class NetworkEngine extends Thread {
                 if (waitMessage == null)
                     continue;
 
-                if (waitMessage.getClientAddress() != address)
+                if (!waitMessage.getClientAddress().equals(address))
                     continue;
 
                 waitConfirmationPackets.remove(transferID);

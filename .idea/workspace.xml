@@ -4,22 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Added smoothing for player sync at client. Added sync betweet Java and UPS (When UPS shutdown, jail server restarting and wait when UPS will be started). TODO: Add Cache reflected + annotation system for automatic serialize packets; Add me.tongfei progress bar (Refactor console messages for to make it clearer). If possible, refactor code at client and UPS to be it clearer.">
-      <change afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/log4j2.xml" afterDir="false" />
+    <list default="true" id="01478f07-d288-4a30-9ea6-9341d1c55490" name="Changes" comment="Implemented LOG4J library and refactored console output, now message in the console are written like this: &quot;18:32:38.882 [Core.JailServer] [main] INFO - Initializing server 0.0.1&quot; ('INFO' and other levels are colored). Refactored restart server system when UPS shutdown. Now, when JailServer has been restarted (needed for develop) UPS pools will be cleared from old players. TODO: Add Cache reflected + annotation system for automatic serialize packets; &#10;&#10;********************************&#10;After this commit, all subsequent commits that contain significant changes to the gameplay part or add something to it are considered a new version and the patch version is incremented. If the patch version reaches 9, the Minor version is incremented.&#10;********************************">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailLogging.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailPools.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailPools.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Core/JailServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Entities/JailPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Gameplay/Entities/JailPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkConstants.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Network/NetworkLog.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPExceptions.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPExceptions.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/UnityPhysics/JUPP/JUPPLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/OutgoingPacketData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Data/OutgoingPacketData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Factory/PacketConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Packets/Factory/PacketConstants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Quaternion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Quaternion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Vector3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/VER7U7/Server/Types/Vector3.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,19 +68,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "jdk.selected.JAVA_MODULE": "11",
-    "last_opened_file_path": "D:/Projects/AutomizeProject",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;jdk.selected.JAVA_MODULE&quot;: &quot;11&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Projects/AutomizeProject&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.VER7U7.Main" />
@@ -226,7 +222,14 @@
       <option name="project" value="LOCAL" />
       <updated>1757099111237</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Implemented LOG4J library and refactored console output, now message in the console are written like this: &quot;18:32:38.882 [Core.JailServer] [main] INFO - Initializing server 0.0.1&quot; ('INFO' and other levels are colored). Refactored restart server system when UPS shutdown. Now, when JailServer has been restarted (needed for develop) UPS pools will be cleared from old players. TODO: Add Cache reflected + annotation system for automatic serialize packets; &#10;&#10;********************************&#10;After this commit, all subsequent commits that contain significant changes to the gameplay part or add something to it are considered a new version and the patch version is incremented. If the patch version reaches 9, the Minor version is incremented.&#10;********************************">
+      <created>1757259710327</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1757259710327</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -271,6 +274,8 @@
     <MESSAGE value="Edited local player sync between player and server (now client send inputs and server calculate player coordinates). TODO: Add sync between server and player coordinates at client. Fix jumps. ADD Cache reflected + annotation system for automatic serialize packets; Add me.tongfei progress bar, add sync between Java server and UPS (for example: When UPS off - off Java server)" />
     <MESSAGE value="Added sync packet between UPS and client (id 12) and added extrapolation in client for smooth sync player position. Fixed jumps. TODO: Review jumpDelayTime at client. Add Cache reflected + annotation system for automatic serialize packets; Add me.tongfei progress bar, add sync between Java server and UPS (for example: When UPS off - off Java server)" />
     <MESSAGE value="Added smoothing for player sync at client. Added sync betweet Java and UPS (When UPS shutdown, jail server restarting and wait when UPS will be started). TODO: Add Cache reflected + annotation system for automatic serialize packets; Add me.tongfei progress bar (Refactor console messages for to make it clearer). If possible, refactor code at client and UPS to be it clearer. Fix jumps." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added smoothing for player sync at client. Added sync betweet Java and UPS (When UPS shutdown, jail server restarting and wait when UPS will be started). TODO: Add Cache reflected + annotation system for automatic serialize packets; Add me.tongfei progress bar (Refactor console messages for to make it clearer). If possible, refactor code at client and UPS to be it clearer. Fix jumps." />
+    <MESSAGE value="Implemented LOG4J library and refactored console output, now message in the console are written like this: &quot;18:32:38.882 [Core.JailServer] [main] INFO - Initializing server 0.0.1&quot; ('INFO' and other levels are colored). Refactored restart server system when UPS shutdown. Now, when JailServer has been restarted (needed for develop) UPS pools will be cleared from old players. TODO: Add Cache reflected + annotation system for automatic serialize packets; &#10;&#10;********************************&#10;After this commit, all subsequent commits that contain significant changes to the gameplay part or add something to it are considered a new version and the patch version is incremented. If the patch version reaches 9, the Minor version is incremented.&#10;********************************" />
+    <MESSAGE value="Implemented LOG4J library and refactored console output, now message in the console are written like this: &quot;18:32:38.882 [Core.JailServer] [main] INFO - Initializing server 0.0.1&quot; ('INFO' and other levels are colored). Refactored restart server system when UPS shutdown. Now, when JailServer has been restarted (needed for develop) UPS pools will be cleared from old players. TODO: Add Cache reflected + annotation system for automatic serialize packets; Add sync between another players; &#10;&#10;********************************&#10;After this commit, all subsequent commits that contain significant changes to the gameplay part or add something to it are considered a new version and the patch version is incremented. If the patch version reaches 9, the Minor version is incremented.&#10;********************************" />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented LOG4J library and refactored console output, now message in the console are written like this: &quot;18:32:38.882 [Core.JailServer] [main] INFO - Initializing server 0.0.1&quot; ('INFO' and other levels are colored). Refactored restart server system when UPS shutdown. Now, when JailServer has been restarted (needed for develop) UPS pools will be cleared from old players. TODO: Add Cache reflected + annotation system for automatic serialize packets; &#10;&#10;********************************&#10;After this commit, all subsequent commits that contain significant changes to the gameplay part or add something to it are considered a new version and the patch version is incremented. If the patch version reaches 9, the Minor version is incremented.&#10;********************************" />
   </component>
 </project>

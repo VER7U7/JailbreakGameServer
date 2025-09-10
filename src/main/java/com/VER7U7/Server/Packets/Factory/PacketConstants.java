@@ -44,14 +44,17 @@ public class PacketConstants {
         Ping(7, false),
         ConfirmAsk(8, false),
 
-        PlayerMove(10, false),
-        ChatMessage(11, true),
+        AllPlayersInfo(9, false),
+        AddPlayer(10, true),
+        DeletePlayer(11, true),
 
         PlayerSync(12, false),
 
         ClientSpectator(13, true),
         ClientSpawn(14, true),
         ClientDeath(15, true),
+
+
 
         Disconnect(255, false);
 

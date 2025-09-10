@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public class NetworkConstants {
 
+    //NEJB -> Network Extended Java Binary Protocol
     public static final byte[] NEJB_PROTOCOL_HEADER = "NEJB".getBytes(StandardCharsets.US_ASCII);
     public static final String NEJB_PROTOCOL_VERSION = "0.0.1";
     public static final int NEJB_PROTOCOL_MAX_LENGTH = 1024;
