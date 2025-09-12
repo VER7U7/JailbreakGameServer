@@ -7,10 +7,10 @@ public class NetworkPlayerSession {
 
     private final SocketAddress clientAddress;
     private long lastSeenTimestamp;
-    private int playerID;
+    private short playerID;
 
 
-    public NetworkPlayerSession(SocketAddress clientAddress, int playerID) {
+    public NetworkPlayerSession(SocketAddress clientAddress, short playerID) {
         this.clientAddress = clientAddress;
         this.lastSeenTimestamp = System.currentTimeMillis();
         this.playerID = playerID;
@@ -28,11 +28,11 @@ public class NetworkPlayerSession {
         this.lastSeenTimestamp = System.currentTimeMillis();
     }
 
-    public int getPlayerID() {
+    public short getplayerID() {
         return playerID;
     }
 
-    public void setPlayerID(int playerID) {
+    public void setplayerID(short playerID) {
         this.playerID = playerID;
     }
 

@@ -9,18 +9,18 @@ public class NetworkOutgoingMessage extends NetworkMessage {
     public static final int NETWORK_OUTGOING_DEFAULT = 0;
     public static final int NETWORK_DISCONNECT_PLAYER = 1;
 
-    private int playerID;
+    private short playerID;
 
-    public NetworkOutgoingMessage(NetworkPacket packet, int messageType, int playerID) {
+    public NetworkOutgoingMessage(NetworkPacket packet, int messageType, short playerID) {
         super(packet, messageType);
         this.playerID = playerID;
     }
 
-    public int getPlayerID() {
+    public short getplayerID() {
         return playerID;
     }
 
-    public void setPlayerID(int playerID) {
+    public void setplayerID(short playerID) {
         this.playerID = playerID;
     }
 

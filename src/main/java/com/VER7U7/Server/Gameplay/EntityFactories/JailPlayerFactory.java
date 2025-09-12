@@ -7,16 +7,16 @@ public class JailPlayerFactory {
 
     private JailPlayer player = new JailPlayer();
 
-    public static JailPlayerFactory createPlayer(int playerID) {
-        return new JailPlayerFactory().setPlayerId((short)playerID);
+    public static JailPlayerFactory createPlayer(short playerID) {
+        return new JailPlayerFactory().setplayerID((short)playerID);
     }
 
     public JailPlayer build() {
         return player;
     }
 
-    public JailPlayerFactory setPlayerId(short playerId) {
-        player.playerID = playerId;
+    public JailPlayerFactory setplayerID(short playerID) {
+        player.playerID = playerID;
         return this;
     }
 

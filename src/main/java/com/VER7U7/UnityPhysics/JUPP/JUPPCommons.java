@@ -5,7 +5,7 @@ public class JUPPCommons {
     public static final int JUPP_BUFFER_SIZE = 1024;
 
     public static final String JUPP_HEADER = "JUPP";
-    public static final String JUPP_VERSION = "0.0.1";
+    public static final String JUPP_VERSION = "0.0.2";
 
 
 

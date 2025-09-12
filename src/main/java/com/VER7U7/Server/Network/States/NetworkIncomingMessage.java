@@ -10,18 +10,18 @@ public class NetworkIncomingMessage extends NetworkMessage {
     public static final int NETWORK_INCOMING_NEW_PLAYER = 1;
     public static final int NETWORK_INCOMING_DELETE_PLAYER = 2;
 
-    private int playerID;
+    private short playerID;
 
-    public NetworkIncomingMessage(NetworkPacket packet, int messageType, int playerID) {
+    public NetworkIncomingMessage(NetworkPacket packet, int messageType, short playerID) {
         super(packet, messageType);
         this.playerID = playerID;
     }
 
-    public int getPlayerID() {
+    public short getplayerID() {
         return playerID;
     }
 
-    public void setPlayerID(int playerID) {
+    public void setplayerID(short playerID) {
         this.playerID = playerID;
     }
 

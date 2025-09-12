@@ -2,6 +2,7 @@ package com.VER7U7.Server.Core;
 
 import com.VER7U7.Server.Gameplay.Rules.BasicRules;
 import com.VER7U7.Server.Network.NetworkEngine;
+import com.VER7U7.Server.Network.NetworkPacket;
 import com.VER7U7.Server.Network.States.NetworkIncomingMessage;
 import com.VER7U7.Server.Network.States.NetworkOutgoingMessage;
 import com.VER7U7.Server.Gameplay.EntityFactories.JailPlayerFactory;
@@ -16,10 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.VER7U7.Main.*;
@@ -183,7 +182,11 @@ public class JailServer {
 
     private void sendAuthoritativeData() {
         //Sync playing data (local player)
-        for (Map.Entry<Integer, JailPlayer> player : jailPools.playersPool.entrySet()) {
+        if (jailPools.playersPool.size() > 0) {
+            physicController.playerSyncAll(jailPools);
+        }
+
+        for (Map.Entry<Short, JailPlayer> player : jailPools.playersPool.entrySet()) {
             JailPlayer jailPlayer = player.getValue();
 
             if (jailPlayer.ticksTimeoutToSync > 0) {
@@ -195,7 +198,6 @@ public class JailServer {
                 jailPlayer.unityInstanceID != 0)
                 continue;
 
-            physicController.playerSync(jailPlayer);
             OutgoingPlayerSyncPacket outgoingPacket = new OutgoingPlayerSyncPacket(
                     jailPlayer.position, jailPlayer.velocity, jailPlayer.rotation, jailPlayer.jumpDelayTime, jailPlayer.isGrounded
             );
@@ -204,40 +206,38 @@ public class JailServer {
 
         //Sync deleted players
         if (jailPools.deletedPlayersPool.size() != 0) {
-            OutgoingDeletePlayerPacket deletePlayerPacket = new OutgoingDeletePlayerPacket();
-            for (JailPlayer deletePlayer : jailPools.deletedPlayersPool)
-                deletePlayerPacket.allDeletePlayers.add(deletePlayer.playerID);
+            short[] allDelete = new short[jailPools.deletedPlayersPool.size()];
+            for (int i = 0; i < allDelete.length; i++) {
+                allDelete[i] = Objects.requireNonNull(jailPools.deletedPlayersPool.poll()).playerID;
+            }
 
-            jailPools.deletedPlayersPool.clear();
+            OutgoingDeletePlayerPacket deletePlayerPacket = new OutgoingDeletePlayerPacket(allDelete);
+            NetworkPacket packet = deletePlayerPacket.Serialize();
 
             for (JailPlayer receivePlayer : jailPools.playersPool.values()) {
-                playersNetwork.addPacketToOutgoing(deletePlayerPacket.Serialize(), 0, receivePlayer.playerID);
+                playersNetwork.addPacketToOutgoing(packet, 0, receivePlayer.playerID);
             }
         }
 
         //Sync added players
         if (jailPools.addedPlayersPool.size() != 0) {
-            OutgoingAddPlayerPacket addedPlayerPacket = new OutgoingAddPlayerPacket();
-            for (JailPlayer addedPlayer : jailPools.addedPlayersPool) {
-                addedPlayerPacket.addPlayersInfo.put(addedPlayer.playerID, addedPlayer);
-            }
-
-            jailPools.addedPlayersPool.clear();
+            OutgoingAddPlayerPacket addedPlayerPacket = new OutgoingAddPlayerPacket(jailPools.addedPlayersPool);
+            NetworkPacket packet = addedPlayerPacket.Serialize();
 
             for (JailPlayer receivePlayer : jailPools.playersPool.values()) {
-                playersNetwork.addPacketToOutgoing(addedPlayerPacket.Serialize(), 0, receivePlayer.playerID);
+                playersNetwork.addPacketToOutgoing(packet, 0, receivePlayer.playerID);
             }
+            jailPools.addedPlayersPool.clear();
         }
 
         //Sync all players
         if (jailPools.playersPool.size() != 0) {
-            OutgoingAllPlayersInfoPacket allPlayersInfoPacket = new OutgoingAllPlayersInfoPacket();
-            for (JailPlayer eachPlayer : jailPools.playersPool.values()) {
-                allPlayersInfoPacket.playersInfo.put(eachPlayer.playerID, eachPlayer);
-            }
+            OutgoingAllPlayersInfoPacket allPlayersInfoPacket = new OutgoingAllPlayersInfoPacket(jailPools.playersPool);
+            NetworkPacket packet = allPlayersInfoPacket.Serialize();
+
 
             for (JailPlayer receivePlayer : jailPools.playersPool.values()) {
-                playersNetwork.addPacketToOutgoing(allPlayersInfoPacket.Serialize(), 0, receivePlayer.playerID);
+                playersNetwork.addPacketToOutgoing(packet, 0, receivePlayer.playerID);
             }
         }
     }
@@ -257,14 +257,14 @@ public class JailServer {
             try {
                 if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DEFAULT) {
                     IncomingPacketType packetType = IncomingPacketType.fromID(incomingMessage.getPacket().getPacketId());
-                    jailPacketService.callToPacketFactory(packetType, incomingMessage.getPlayerID(), incomingMessage.getPacket());
+                    jailPacketService.callToPacketFactory(packetType, incomingMessage.getplayerID(), incomingMessage.getPacket());
                     continue;
                 }
 
                 if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER) {
                     LOGGER.debug("Initializing new player....");
-                    JailPlayer player = JailPlayerFactory.createPlayer(incomingMessage.getPlayerID())
-                            .setNickName("Player " + incomingMessage.getPlayerID())
+                    JailPlayer player = JailPlayerFactory.createPlayer(incomingMessage.getplayerID())
+                            .setNickName("Player " + incomingMessage.getplayerID())
                             .setPlayingTeam(BasicRules.Team.Spectator)
                             .build();
                     jailPools.AddPlayer(player); //Initialize player at pools
@@ -274,10 +274,9 @@ public class JailServer {
                             new OutgoingSpectatorPacket(0).Serialize(), 0, player.playerID
                     );
 
-                    Map<Short, JailPlayer> allPlayersToAdd = new HashMap<>(); //Adding players to scene at client
-                    for (Map.Entry<Integer, JailPlayer> players : jailPools.playersPool.entrySet()) {
-                        LOGGER.debug("{} : {}", players.getValue().playerID, player.playerID);
-                        allPlayersToAdd.put(players.getKey().shortValue(), players.getValue());
+                    ConcurrentLinkedQueue<JailPlayer> allPlayersToAdd = new ConcurrentLinkedQueue<>(); //Adding players to scene at client
+                    for (Map.Entry<Short, JailPlayer> players : jailPools.playersPool.entrySet()) {
+                        allPlayersToAdd.add(players.getValue());
                     }
                     playersNetwork.addPacketToOutgoing(
                             new OutgoingAddPlayerPacket(allPlayersToAdd).Serialize(), 0, player.playerID
@@ -304,7 +303,7 @@ public class JailServer {
                 }
 
                 if (incomingMessage.getMessageType() == NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER) {
-                    JailPlayer player = jailPools.playersPool.get(incomingMessage.getPlayerID());
+                    JailPlayer player = jailPools.playersPool.get(incomingMessage.getplayerID());
                     jailPools.DeletePlayer(player.playerID);
                     physicController.playerUpdate(player, JailPlayer.PlayerUpdateType.DeletePlayer);
                     LOGGER.debug("Removed " + player.nickname + " from the server.");

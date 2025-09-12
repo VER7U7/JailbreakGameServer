@@ -11,10 +11,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
@@ -52,27 +51,27 @@ public abstract class OutgoingPacketData {
 
     public static class OutgoingConnectionSuccess extends OutgoingPacketData {
 
-        public short playerId;
+        public short playerID;
         public String successText = "SUCCESS";
 
         public OutgoingConnectionSuccess() {
             super(OutgoingPacketType.ConnectionSuccess);
         }
 
-        public OutgoingConnectionSuccess(short playerId, String successText) {
+        public OutgoingConnectionSuccess(short playerID, String successText) {
             this();
-            this.playerId = playerId;
+            this.playerID = playerID;
             this.successText = successText;
         }
 
-        public OutgoingConnectionSuccess(int playerId) {
+        public OutgoingConnectionSuccess(short playerID) {
             this();
-            this.playerId = (short) playerId;
+            this.playerID = playerID;
         }
 
         @Override
         public NetworkPacket Serialize() {
-            ByteBuffer buffer = LittleByteBuffer.allocate(2 + successText.length()).putShort(playerId).put(successText.getBytes(StandardCharsets.US_ASCII));
+            ByteBuffer buffer = LittleByteBuffer.allocate(2 + successText.length()).putShort(playerID).put(successText.getBytes(StandardCharsets.US_ASCII));
             return new NetworkPacket(buffer.array(), type.getID());
         }
     }
@@ -256,13 +255,13 @@ public abstract class OutgoingPacketData {
 
     public static class OutgoingAddPlayerPacket extends OutgoingPacketData {
 
-        public Map<Short, JailPlayer> addPlayersInfo = new HashMap<>();
+        public ConcurrentLinkedQueue<JailPlayer> addPlayersInfo;
 
         public OutgoingAddPlayerPacket() {
             super(OutgoingPacketType.AddPlayer);
         }
 
-        public OutgoingAddPlayerPacket(Map<Short, JailPlayer> addPlayersInfo) {
+        public OutgoingAddPlayerPacket(ConcurrentLinkedQueue<JailPlayer> addPlayersInfo) {
             this();
             this.addPlayersInfo = addPlayersInfo;
         }
@@ -270,14 +269,14 @@ public abstract class OutgoingPacketData {
         @Override
         public NetworkPacket Serialize() {
             AtomicInteger nickLengthSum = new AtomicInteger();
-            addPlayersInfo.forEach((key, value) -> nickLengthSum.addAndGet(value.nickname.getBytes(StandardCharsets.UTF_8).length));
+            addPlayersInfo.forEach((value) -> nickLengthSum.addAndGet(value.nickname.getBytes(StandardCharsets.UTF_8).length));
 
             LOGGER.debug(addPlayersInfo);
 
 
             ByteBuffer buffer = LittleByteBuffer.allocate(
                     Short.BYTES //Count add players
-                    + Short.BYTES * addPlayersInfo.size() //PlayerID * Count
+                    + Short.BYTES * addPlayersInfo.size() //playerID * Count
                     + Short.BYTES * addPlayersInfo.size() //Ping * Count
                     + Short.BYTES * addPlayersInfo.size() //Team * Count
                     + Short.BYTES * addPlayersInfo.size() //State * Count
@@ -289,9 +288,8 @@ public abstract class OutgoingPacketData {
 
             buffer.putShort((short) addPlayersInfo.size());
 
-            for (Map.Entry<Short, JailPlayer> addPlayerEntry : addPlayersInfo.entrySet()) {
-                short playerID = addPlayerEntry.getKey();
-                JailPlayer player = addPlayerEntry.getValue();
+            for (JailPlayer player : addPlayersInfo) {
+                short playerID = player.playerID;
 
                 buffer.putShort(playerID);
                 buffer.putShort((short) player.RTT);
@@ -309,26 +307,27 @@ public abstract class OutgoingPacketData {
 
     public static class OutgoingDeletePlayerPacket extends OutgoingPacketData {
 
-        public List<Short> allDeletePlayers = new ArrayList<>();
+        public short[] allDelete;
 
         public OutgoingDeletePlayerPacket() {
             super(OutgoingPacketType.DeletePlayer);
         }
 
-        public OutgoingDeletePlayerPacket(List<Short> allDeletePlayers) {
+        public OutgoingDeletePlayerPacket(short[] allDelete) {
             this();
-            this.allDeletePlayers = allDeletePlayers;
+            this.allDelete = allDelete;
         }
 
         @Override
         public NetworkPacket Serialize() {
             ByteBuffer buffer = LittleByteBuffer.allocate(
                     Short.BYTES // Count players
-                    + Short.BYTES * allDeletePlayers.size() //PlayerID
+                    + Short.BYTES * allDelete.length//playerID
             );
-            buffer.putShort((short) allDeletePlayers.size());
-            for (Short playerID : allDeletePlayers)
-                buffer.putShort(playerID);
+            buffer.putShort((short) allDelete.length);
+            for (short value : allDelete) {
+                buffer.putShort(value);
+            }
 
             return new NetworkPacket(buffer.array(), this.type.getID());
         }
@@ -336,13 +335,13 @@ public abstract class OutgoingPacketData {
 
     public static class OutgoingAllPlayersInfoPacket extends OutgoingPacketData {
 
-        public Map<Short, JailPlayer> playersInfo = new HashMap<>();
+        public ConcurrentMap<Short, JailPlayer> playersInfo;
 
         public OutgoingAllPlayersInfoPacket() {
             super(OutgoingPacketType.AllPlayersInfo);
         }
 
-        public OutgoingAllPlayersInfoPacket(Map<Short, JailPlayer> playersInfo) {
+        public OutgoingAllPlayersInfoPacket(ConcurrentMap<Short, JailPlayer> playersInfo) {
             this();
             this.playersInfo = playersInfo;
         }
@@ -356,7 +355,7 @@ public abstract class OutgoingPacketData {
 
             ByteBuffer buffer = LittleByteBuffer.allocate(
                     Short.BYTES //Count players
-                    + Short.BYTES * playersInfo.size() //PlayerID * Count
+                    + Short.BYTES * playersInfo.size() //playerID * Count
                     + Short.BYTES * playersInfo.size() //RTT * Count
                     + Short.BYTES * playersInfo.size() //Player Team * Count
                     + Short.BYTES * playersInfo.size() //Player State * Count
@@ -369,7 +368,7 @@ public abstract class OutgoingPacketData {
             buffer.putShort((short) playersInfo.size());
 
             for (Map.Entry<Short, JailPlayer> playerEntry : playersInfo.entrySet()) {
-                short playerID = playerEntry.getKey();
+                short playerID = playerEntry.getValue().playerID;
                 JailPlayer player = playerEntry.getValue();
 
                 buffer.putShort(playerID);

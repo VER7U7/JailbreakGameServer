@@ -12,7 +12,7 @@ public class NewIncomingConnectionPacket implements PacketFunction {
     private FunctionGlobalArgs globalArgs;
 
 
-    public void process(int playerID, NetworkPacket networkPacket) {
+    public void process(short playerID, NetworkPacket networkPacket) {
 
 
     }

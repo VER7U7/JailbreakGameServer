@@ -16,13 +16,13 @@ public class LocalPlayerSyncPacket implements PacketFunction{
     private JUPPController physicsController;
 
     @Override
-    public void process(int playerID, NetworkPacket networkPacket) {
+    public void process(short playerID, NetworkPacket networkPacket) {
         IncomingLocalInputSync syncPacket = new IncomingLocalInputSync();
         syncPacket.Deserialize(networkPacket);
 
         JailPlayer player = jailPools.playersPool.get(playerID);
 
-        if (player.unityInstanceID == 0)
+        if (player == null || player.unityInstanceID == 0)
             return;
 
         if (player.state != JailPlayer.PlayerState.PlayerAlive)

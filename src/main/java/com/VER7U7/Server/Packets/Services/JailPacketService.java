@@ -43,7 +43,7 @@ public class JailPacketService {
         }
     }
 
-    public boolean callToPacketFactory(IncomingPacketType packetType, int playerID, NetworkPacket networkPacket) {
+    public boolean callToPacketFactory(IncomingPacketType packetType, short playerID, NetworkPacket networkPacket) {
         PacketFunction packetFunction = packetFactoryPool.get(packetType);
 
         if (packetFunction == null)

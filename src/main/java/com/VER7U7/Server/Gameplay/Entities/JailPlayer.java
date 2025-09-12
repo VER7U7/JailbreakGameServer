@@ -89,6 +89,13 @@ public class JailPlayer {
                 .array();
     }
 
+    public static byte[] playerSyncAllData() {
+        return LittleByteBuffer.allocate(4)
+                .putShort((short) PlayerUpdateType.PlayerSyncAll.getID())
+                .putShort((short) 0)
+                .array();
+    }
+
 
     public enum PlayerState {
         Spectator(2),
@@ -116,7 +123,8 @@ public class JailPlayer {
         AddPlayer(1),
         DeletePlayer(2),
         ClientSyncInput(3),
-        PlayerSync(4);
+        PlayerSync(4),
+        PlayerSyncAll(5);
 
         private int value;
 

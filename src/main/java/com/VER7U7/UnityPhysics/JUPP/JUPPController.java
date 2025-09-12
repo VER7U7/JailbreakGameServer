@@ -1,5 +1,6 @@
 package com.VER7U7.UnityPhysics.JUPP;
 
+import com.VER7U7.Server.Core.JailPools;
 import com.VER7U7.Server.Gameplay.Entities.JailPlayer;
 import com.VER7U7.Server.Utils.Buffers.LittleByteBuffer;
 import org.apache.logging.log4j.LogManager;
@@ -118,6 +119,42 @@ public class JUPPController {
                 player.cameraPosition.fromBytes(buffer);
                 player.cameraRotation.fromBytes(buffer);
                 player.cameraOffsetZ = buffer.getFloat();
+                return true;
+            }
+        }catch (CancellationException e) {
+            return false;
+        }
+        return false;
+    }
+
+    public boolean playerSyncAll(JailPools jailPools) {
+        try {
+            JUPPPacket outPacket = new JUPPPacket(
+                    JailPlayer.playerSyncAllData(),
+                    JuppOutgoingCommands.UpdatePlayer.getID());
+
+            JUPPPacket physicsAnswer = engine.sendWithResult(outPacket);
+            ByteBuffer buffer = LittleByteBuffer.wrap(physicsAnswer.getData());
+            if (buffer.get() == 1) {
+                short availablePlayers = buffer.getShort();
+
+                for (int i = 0; i < availablePlayers; i++) {
+                    short playerID = buffer.getShort();
+                    JailPlayer player = jailPools.playersPool.get(playerID);
+
+                    if (player == null)
+                        return false;
+
+                    player.position.fromBytes(buffer);
+                    player.velocity.fromBytes(buffer);
+                    player.rotation.fromBytes(buffer);
+                    player.jumpDelayTime = buffer.getFloat();
+                    player.isGrounded = buffer.get() != 0;
+
+                    player.cameraPosition.fromBytes(buffer);
+                    player.cameraRotation.fromBytes(buffer);
+                    player.cameraOffsetZ = buffer.getFloat();
+                }
                 return true;
             }
         }catch (CancellationException e) {

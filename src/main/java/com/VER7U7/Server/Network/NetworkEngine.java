@@ -41,7 +41,7 @@ public class NetworkEngine extends Thread {
     private final Random random = new Random();
 
     private final ConcurrentMap<SocketAddress, NetworkPlayerSession> addressToSession;
-    private final ConcurrentMap<Integer, NetworkPlayerSession> playerIdToSession;
+    private final ConcurrentMap<Short, NetworkPlayerSession> playerIDToSession;
     private final ConcurrentMap<SocketAddress, ConnectionData> nonAuthedConnections;
     private final ConcurrentLinkedQueue<NetworkIncomingMessage> incomingQueue;
     private final ConcurrentLinkedQueue<NetworkOutgoingMessage> outgoingQueue;
@@ -57,7 +57,7 @@ public class NetworkEngine extends Thread {
         this.port = port;
 
         this.addressToSession = new ConcurrentHashMap<>();
-        this.playerIdToSession = new ConcurrentHashMap<>();
+        this.playerIDToSession = new ConcurrentHashMap<>();
         this.nonAuthedConnections = new ConcurrentHashMap<>();
         this.waitConfirmationPackets = new ConcurrentHashMap<>();
         this.confirmedPacketsQueue = new ConcurrentHashMap<>();
@@ -103,7 +103,7 @@ public class NetworkEngine extends Thread {
             if (networkReady.get()) {
                 OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(DisconnectReason.ClientDisconnect);
                 NetworkPacket outgoingPacket = disconnectPacket.Serialize();
-                for (Map.Entry<Integer, NetworkPlayerSession> entry : playerIdToSession.entrySet()) {
+                for (Map.Entry<Short, NetworkPlayerSession> entry : playerIDToSession.entrySet()) {
                     addPacketToOutgoing(outgoingPacket, 0, entry.getKey());
                     channel.send(disconnectPacket.Serialize().getFormattedDataBuffer(), entry.getValue().getClientAddress());
                     disconnectPlayer(entry.getValue().getClientAddress(), DisconnectReason.ClientDisconnect);
@@ -136,8 +136,8 @@ public class NetworkEngine extends Thread {
     }
 
 
-    public void addPacketToOutgoing(NetworkPacket packet, int messageType, int playerId) {
-        NetworkOutgoingMessage outgoingMessage = new NetworkOutgoingMessage(packet, messageType, playerId);
+    public void addPacketToOutgoing(NetworkPacket packet, int messageType, short playerID) {
+        NetworkOutgoingMessage outgoingMessage = new NetworkOutgoingMessage(packet, messageType, playerID);
         outgoingQueue.add(outgoingMessage);
         selector.wakeup();
     }
@@ -212,7 +212,7 @@ public class NetworkEngine extends Thread {
                     return;
                 }
 
-                incomingQueue.add(new NetworkIncomingMessage(packet, networkIncomingType, session.getPlayerID()));
+                incomingQueue.add(new NetworkIncomingMessage(packet, networkIncomingType, session.getplayerID()));
             }
         }catch(ClosedSelectorException ignore) {}
         catch (IOException e) {
@@ -228,13 +228,13 @@ public class NetworkEngine extends Thread {
     * */
     public boolean updatePing(NetworkPacket packet, NetworkPlayerSession session) {
         if (packet.getPacketId() == IncomingPacketType.Ping.getID()) {
-            JailPlayer player = jailPools.playersPool.get(session.getPlayerID());
+            JailPlayer player = jailPools.playersPool.get(session.getplayerID());
             IncomingPing pingPacket = new IncomingPing();
             pingPacket.Deserialize(packet);
 
             if (pingPacket.step == 0) {
                 OutgoingPing outgoingAsk = new OutgoingPing((byte) 1, System.currentTimeMillis());
-                addPacketToOutgoing(outgoingAsk.Serialize(), 0, session.getPlayerID());
+                addPacketToOutgoing(outgoingAsk.Serialize(), 0, session.getplayerID());
                 player.askSendTime = System.currentTimeMillis();
             } else if (pingPacket.step == 2) {
                 long newRTT = System.currentTimeMillis() - player.askSendTime;
@@ -340,16 +340,16 @@ public class NetworkEngine extends Thread {
                     nonAuthedConnections.get(socketAddress).setState(ConnectionData.ConnectionStateMachine.INVITATION_CHECKED);
                     nonAuthedConnections.get(socketAddress).updateTimestamp();
 
-                    int newPlayerId = calculateAvailablePlayerID();
-                    NetworkPlayerSession session = new NetworkPlayerSession(socketAddress, newPlayerId);
-                    playerIdToSession.put(newPlayerId, session);
+                    short newplayerID = calculateAvailableplayerID();
+                    NetworkPlayerSession session = new NetworkPlayerSession(socketAddress, newplayerID);
+                    playerIDToSession.put(newplayerID, session);
                     addressToSession.put(socketAddress, session);
 
-                    incomingQueue.add(new NetworkIncomingMessage(null, NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER, newPlayerId));
+                    incomingQueue.add(new NetworkIncomingMessage(null, NetworkIncomingMessage.NETWORK_INCOMING_NEW_PLAYER, newplayerID));
 
                     nonAuthedConnections.remove(socketAddress);
 
-                    OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess(newPlayerId);
+                    OutgoingConnectionSuccess outgoingSuccess = new OutgoingConnectionSuccess(newplayerID);
                     channel.send(outgoingSuccess.Serialize().getFormattedDataBuffer(), socketAddress);
                     LOGGER.info("Connected new player to the server ({})", socketAddress);
                 } else {
@@ -361,9 +361,9 @@ public class NetworkEngine extends Thread {
 
     }
 
-    private int calculateAvailablePlayerID() {
-        int id = 0;
-        while (playerIdToSession.containsKey(id)) {
+    private short calculateAvailableplayerID() {
+        short id = 0;
+        while (playerIDToSession.containsKey(id)) {
             id++;
         }
         return id;
@@ -405,7 +405,7 @@ public class NetworkEngine extends Thread {
         while ((outgoingMessage = outgoingQueue.poll()) != null) {
 
             if (outgoingMessage.getMessageType() == NetworkOutgoingMessage.NETWORK_OUTGOING_DEFAULT) {
-                NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
+                NetworkPlayerSession session = playerIDToSession.get(outgoingMessage.getplayerID());
                 if (session != null) {
                     try {
 
@@ -427,7 +427,7 @@ public class NetworkEngine extends Thread {
                     LOGGER.error("Unknown session, may be client break connection.");
                 }
             } else if (outgoingMessage.getMessageType() == NetworkOutgoingMessage.NETWORK_DISCONNECT_PLAYER) {
-                NetworkPlayerSession session = playerIdToSession.get(outgoingMessage.getPlayerID());
+                NetworkPlayerSession session = playerIDToSession.get(outgoingMessage.getplayerID());
                 if (session != null) {
                     disconnectPlayer(session.getClientAddress(), DisconnectReason.InnerException);
                 } else {
@@ -456,18 +456,18 @@ public class NetworkEngine extends Thread {
                         channel.send(waitMessage.getPacket().getFormattedDataBuffer(), waitMessage.getClientAddress());
                     }
                 } else {
-                    int playerId = addressToPlayerID(waitMessage.getClientAddress());
-                    if (playerId == -1) {
+                    short playerID = (short) addressToplayerID(waitMessage.getClientAddress());
+                    if (playerID == -1) {
                         iterator.remove();
                         return;
                     }
 
-                    if (!jailPools.playersPool.containsKey(playerId)) {
+                    if (!jailPools.playersPool.containsKey(playerID)) {
                         iterator.remove();
                         return;
                     }
 
-                    int RTT = jailPools.playersPool.get(playerId).RTT + 8;
+                    int RTT = jailPools.playersPool.get(playerID).RTT + 8;
                     if (RTT > NEJB_PLAYER_TIMEOUT_MS)
                         RTT = NEJB_CONFIRM_NOT_LOGIN_MS;
 
@@ -515,8 +515,8 @@ public class NetworkEngine extends Thread {
         }
     }
 
-    private int addressToPlayerID(SocketAddress address) {
-        for (Map.Entry<Integer, NetworkPlayerSession> entry : playerIdToSession.entrySet()) {
+    private int addressToplayerID(SocketAddress address) {
+        for (Map.Entry<Short, NetworkPlayerSession> entry : playerIDToSession.entrySet()) {
             if (entry.getValue().getClientAddress() == address)
                 return entry.getKey();
         }
@@ -552,9 +552,9 @@ public class NetworkEngine extends Thread {
     private void disconnectPlayer(SocketAddress address, DisconnectReason reason) {
         NetworkPlayerSession session = addressToSession.get(address);
         OutgoingDisconnect disconnectPacket = new OutgoingDisconnect(reason);
-        incomingQueue.add(new NetworkIncomingMessage(disconnectPacket.Serialize(), NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER, session.getPlayerID()));
+        incomingQueue.add(new NetworkIncomingMessage(disconnectPacket.Serialize(), NetworkIncomingMessage.NETWORK_INCOMING_DELETE_PLAYER, session.getplayerID()));
 
-        playerIdToSession.remove(session.getPlayerID());
+        playerIDToSession.remove(session.getplayerID());
         addressToSession.remove(session.getClientAddress());
         confirmedPacketsQueue.remove(session.getClientAddress());
         if (callbackSessionTimeout != null)
