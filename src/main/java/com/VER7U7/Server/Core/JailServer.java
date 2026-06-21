@@ -172,16 +172,22 @@ public class JailServer {
             }
         } else {
             long sleepTimeNs = NS_PER_SERVER_TICK - elapsedTime;
-            long sleepTimeMs = sleepTimeNs / 1_000_000;
-            int sleepTimeNsRemainder = (int) (sleepTimeMs % 1_000_000);
-            if (sleepTimeMs > 0) {
-                Thread.sleep(sleepTimeMs, sleepTimeNsRemainder);
+
+            if (sleepTimeNs > 2_000_000L) {
+                long sleepTimeMs = (sleepTimeNs - 1_500_000L) / 1_000_000L;
+                if (sleepTimeMs > 0) {
+                    Thread.sleep(sleepTimeMs);
+                }
+            }
+
+            while(System.nanoTime() - lastTickTime < NS_PER_SERVER_TICK) {
+                Thread.onSpinWait();
             }
         }
     }
 
     private void sendAuthoritativeData() {
-        //Sync playing data (local player)
+        //Sync foot playing data (local player)
         if (jailPools.playersPool.size() > 0) {
             physicController.playerSyncAll(jailPools);
         }
@@ -198,8 +204,10 @@ public class JailServer {
                 jailPlayer.unityInstanceID != 0)
                 continue;
 
-            OutgoingPlayerSyncPacket outgoingPacket = new OutgoingPlayerSyncPacket(
-                    jailPlayer.position, jailPlayer.velocity, jailPlayer.rotation, jailPlayer.jumpDelayTime, jailPlayer.isGrounded
+
+            LOGGER.debug(jailPlayer.position);
+            OutgoingPlayerSyncFootPacket outgoingPacket = new OutgoingPlayerSyncFootPacket(
+                    jailPlayer.lastFootInputSyncTick, jailPlayer.position, jailPlayer.velocity, jailPlayer.rotation, jailPlayer.jumpDelayTime, jailPlayer.isGrounded
             );
             playersNetwork.addPacketToOutgoing(outgoingPacket.Serialize(), 0, player.getKey());
         }
@@ -232,7 +240,7 @@ public class JailServer {
 
         //Sync all players
         if (jailPools.playersPool.size() != 0) {
-            OutgoingAllPlayersInfoPacket allPlayersInfoPacket = new OutgoingAllPlayersInfoPacket(jailPools.playersPool);
+            OutgoingAllPlayersInfoPacket allPlayersInfoPacket = new OutgoingAllPlayersInfoPacket(jailPools.playersPool, (int) ticksCount);
             NetworkPacket packet = allPlayersInfoPacket.Serialize();
 
 
@@ -310,7 +318,7 @@ public class JailServer {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error(e);
             }
         }
     }

@@ -214,21 +214,23 @@ public abstract class OutgoingPacketData {
         }
     }
 
-    public static class OutgoingPlayerSyncPacket extends OutgoingPacketData {
+    public static class OutgoingPlayerSyncFootPacket extends OutgoingPacketData {
 
+        public int lastReceivedTick;
         public Vector3 playerPosition;
         public Vector3 playerVelocity;
         public Quaternion playerRotation;
         public float jumpDelayTime;
         public boolean isGrounded;
 
-        public OutgoingPlayerSyncPacket() {
-            super(OutgoingPacketType.PlayerSync);
+        public OutgoingPlayerSyncFootPacket() {
+            super(OutgoingPacketType.PlayerSyncFoot);
         }
 
-        public OutgoingPlayerSyncPacket(Vector3 position, Vector3 velocity, Quaternion rotation,
-                                        float jumpDelayTime, boolean isGrounded) {
+        public OutgoingPlayerSyncFootPacket(int lastReceivedTick, Vector3 position, Vector3 velocity, Quaternion rotation,
+                                            float jumpDelayTime, boolean isGrounded) {
             this();
+            this.lastReceivedTick = lastReceivedTick;
             this.playerPosition = position;
             this.playerVelocity = velocity;
             this.playerRotation = rotation;
@@ -238,7 +240,8 @@ public abstract class OutgoingPacketData {
 
         @Override
         public NetworkPacket Serialize() {
-            ByteBuffer buffer = LittleByteBuffer.allocate(Float.BYTES * 3 + Float.BYTES * 3 + Float.BYTES * 4 + 5);
+            ByteBuffer buffer = LittleByteBuffer.allocate(Float.BYTES * 3 + Float.BYTES * 3 + Float.BYTES * 4 + 9);
+            buffer.putInt(lastReceivedTick);
             playerPosition.getBytes(buffer);
             playerVelocity.getBytes(buffer);
             playerRotation.getBytes(buffer);
@@ -270,9 +273,6 @@ public abstract class OutgoingPacketData {
         public NetworkPacket Serialize() {
             AtomicInteger nickLengthSum = new AtomicInteger();
             addPlayersInfo.forEach((value) -> nickLengthSum.addAndGet(value.nickname.getBytes(StandardCharsets.UTF_8).length));
-
-            LOGGER.debug(addPlayersInfo);
-
 
             ByteBuffer buffer = LittleByteBuffer.allocate(
                     Short.BYTES //Count add players
@@ -334,16 +334,17 @@ public abstract class OutgoingPacketData {
     }
 
     public static class OutgoingAllPlayersInfoPacket extends OutgoingPacketData {
-
+        public int tickID;
         public ConcurrentMap<Short, JailPlayer> playersInfo;
 
         public OutgoingAllPlayersInfoPacket() {
             super(OutgoingPacketType.AllPlayersInfo);
         }
 
-        public OutgoingAllPlayersInfoPacket(ConcurrentMap<Short, JailPlayer> playersInfo) {
+        public OutgoingAllPlayersInfoPacket(ConcurrentMap<Short, JailPlayer> playersInfo, int tickID) {
             this();
             this.playersInfo = playersInfo;
+            this.tickID = tickID;
         }
 
         @Override
@@ -355,6 +356,7 @@ public abstract class OutgoingPacketData {
 
             ByteBuffer buffer = LittleByteBuffer.allocate(
                     Short.BYTES //Count players
+                    + Integer.BYTES // TickID
                     + Short.BYTES * playersInfo.size() //playerID * Count
                     + Short.BYTES * playersInfo.size() //RTT * Count
                     + Short.BYTES * playersInfo.size() //Player Team * Count
@@ -365,6 +367,7 @@ public abstract class OutgoingPacketData {
                     + Float.BYTES * 3 * playersInfo.size() //Camera position * Count
                     + Float.BYTES * 4 * playersInfo.size() //Camera rotation * Count
             );
+            buffer.putInt(tickID);
             buffer.putShort((short) playersInfo.size());
 
             for (Map.Entry<Short, JailPlayer> playerEntry : playersInfo.entrySet()) {

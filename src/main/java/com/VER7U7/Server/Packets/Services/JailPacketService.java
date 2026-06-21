@@ -1,8 +1,11 @@
 package com.VER7U7.Server.Packets.Services;
 
+import com.VER7U7.Server.Core.JailServer;
 import com.VER7U7.Server.Network.NetworkPacket;
 import com.VER7U7.Server.Packets.Handlers.FunctionGlobalArgs;
 import com.VER7U7.Server.Packets.Handlers.PacketFunction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.jar.JarFile;
 import static com.VER7U7.Server.Packets.Factory.PacketConstants.*;
 
 public class JailPacketService {
+    private static final Logger LOGGER = LogManager.getLogger(JailPacketService.class);
 
     public Map<IncomingPacketType, PacketFunction> packetFactoryPool;
 
@@ -31,7 +35,7 @@ public class JailPacketService {
                 Class<? extends PacketFunction> clazz = clazzFor.asSubclass(PacketFunction.class);
                 PacketFunction packetFunction = clazz.getDeclaredConstructor().newInstance();
                 packets.add(packetFunction);
-            } catch(Exception e) { e.printStackTrace(); }
+            } catch(Exception e) { LOGGER.error(e); }
         }
 
         packetFactoryPool = new LinkedHashMap<>();
@@ -51,7 +55,7 @@ public class JailPacketService {
 
         try {
             packetFunction.process(playerID, networkPacket);
-        } catch(Exception e) { e.printStackTrace();}
+        } catch(Exception e) { LOGGER.error(e); }
         return true;
     }
 
@@ -80,7 +84,7 @@ public class JailPacketService {
             }
             return implementingClasses;
         }catch(IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
             return null;
         }
     }

@@ -78,7 +78,7 @@ public class JUPPController {
         return false;
     }
 
-    public boolean inputClientSync(IncomingLocalInputSync origSyncPacket, JailPlayer player) {
+    public boolean inputClientSync(IncomingLocalFootInputSync origSyncPacket, JailPlayer player) {
         try {
             JUPPPacket outPacket = new JUPPPacket(player.clientInputSyncData(
                     origSyncPacket.cameraPos,

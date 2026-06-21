@@ -96,8 +96,6 @@ public class NetworkEngine extends Thread {
     }
 
     public void StopNetwork() {
-        this.networkReady.set(false);
-
         LOGGER.warn("Network shutdown");
         try {
             if (networkReady.get()) {
@@ -110,14 +108,15 @@ public class NetworkEngine extends Thread {
                 }
             }
         }catch(IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
 
         try {
+            this.networkReady.set(false);
             channel.close();
             selector.close();
         }catch(IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         this.interrupt();
     }
@@ -171,7 +170,7 @@ public class NetworkEngine extends Thread {
             }
             catch (ClosedSelectorException ignore) { }
             catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error(e);
             }
         }
         networkReady.set(false);
@@ -216,7 +215,7 @@ public class NetworkEngine extends Thread {
             }
         }catch(ClosedSelectorException ignore) {}
         catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
@@ -229,6 +228,9 @@ public class NetworkEngine extends Thread {
     public boolean updatePing(NetworkPacket packet, NetworkPlayerSession session) {
         if (packet.getPacketId() == IncomingPacketType.Ping.getID()) {
             JailPlayer player = jailPools.playersPool.get(session.getplayerID());
+            if (player == null)
+                return true;
+
             IncomingPing pingPacket = new IncomingPing();
             pingPacket.Deserialize(packet);
 
@@ -421,7 +423,7 @@ public class NetworkEngine extends Thread {
                         }
                         channel.send(outgoingMessage.getPacket().getFormattedDataBuffer(), session.getClientAddress());
                     }catch(IOException e) {
-                        e.printStackTrace();
+                        LOGGER.error(e);
                     }
                 } else {
                     LOGGER.error("Unknown session, may be client break connection.");
@@ -479,7 +481,7 @@ public class NetworkEngine extends Thread {
                     }
                 }
             }catch(IOException e) {
-                e.printStackTrace();
+                LOGGER.error(e);
             }
         }
 
@@ -509,7 +511,7 @@ public class NetworkEngine extends Thread {
                     }
                     channel.send(confirmAsk.Serialize().getFormattedDataBuffer(), address);
                 }catch(IOException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e);
                 }
             }
         }

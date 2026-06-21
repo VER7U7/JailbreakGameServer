@@ -126,7 +126,7 @@ public class JUPPEngine {
 
             return futurePacket.get();
         } catch(SocketException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }catch (CancellationException ce) {
             throw new CancellationException();
         } catch (InterruptedException e) {
@@ -151,7 +151,7 @@ public class JUPPEngine {
 
             return futurePacket.get(millis, TimeUnit.MILLISECONDS);
         } catch(SocketException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }catch (CancellationException ce) {
             throw new CancellationException();
         } catch (InterruptedException e) {
@@ -175,7 +175,7 @@ public class JUPPEngine {
             outPacket.packetTransferID = transferID;
             bridge.sendPacket(outPacket);
         } catch(SocketException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         return transferID;
     }

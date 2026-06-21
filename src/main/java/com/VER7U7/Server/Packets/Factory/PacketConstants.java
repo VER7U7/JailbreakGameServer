@@ -48,7 +48,7 @@ public class PacketConstants {
         AddPlayer(10, true),
         DeletePlayer(11, true),
 
-        PlayerSync(12, false),
+        PlayerSyncFoot(12, false),
 
         ClientSpectator(13, true),
         ClientSpawn(14, true),

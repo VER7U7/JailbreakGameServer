@@ -24,7 +24,7 @@ public class JailPlayer {
     public String nickname;
 
     //Transform
-    public int localInputSyncTick = 0;
+    public int lastFootInputSyncTick = 0;
 
         //player
     public Vector3 position = new Vector3();
@@ -147,12 +147,12 @@ public class JailPlayer {
         if (this == o) return true;
         if (!(o instanceof JailPlayer)) return false;
         JailPlayer that = (JailPlayer) o;
-        return playerID == that.playerID && unityInstanceID == that.unityInstanceID && ticksTimeoutToSync == that.ticksTimeoutToSync && localInputSyncTick == that.localInputSyncTick && Float.compare(that.jumpDelayTime, jumpDelayTime) == 0 && isGrounded == that.isGrounded && Float.compare(that.cameraOffsetZ, cameraOffsetZ) == 0 && nsLastLocalPlayerSyncTime == that.nsLastLocalPlayerSyncTime && RTT == that.RTT && askSendTime == that.askSendTime && state == that.state && playingTeam == that.playingTeam && Objects.equals(nickname, that.nickname) && Objects.equals(position, that.position) && Objects.equals(velocity, that.velocity) && Objects.equals(rotation, that.rotation) && Objects.equals(cameraPosition, that.cameraPosition) && Objects.equals(cameraRotation, that.cameraRotation);
+        return playerID == that.playerID && unityInstanceID == that.unityInstanceID && ticksTimeoutToSync == that.ticksTimeoutToSync && lastFootInputSyncTick == that.lastFootInputSyncTick && Float.compare(that.jumpDelayTime, jumpDelayTime) == 0 && isGrounded == that.isGrounded && Float.compare(that.cameraOffsetZ, cameraOffsetZ) == 0 && nsLastLocalPlayerSyncTime == that.nsLastLocalPlayerSyncTime && RTT == that.RTT && askSendTime == that.askSendTime && state == that.state && playingTeam == that.playingTeam && Objects.equals(nickname, that.nickname) && Objects.equals(position, that.position) && Objects.equals(velocity, that.velocity) && Objects.equals(rotation, that.rotation) && Objects.equals(cameraPosition, that.cameraPosition) && Objects.equals(cameraRotation, that.cameraRotation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerID, unityInstanceID, ticksTimeoutToSync, state, playingTeam, nickname, localInputSyncTick, position, velocity, rotation, jumpDelayTime, isGrounded, cameraPosition, cameraRotation, cameraOffsetZ, nsLastLocalPlayerSyncTime, RTT, askSendTime);
+        return Objects.hash(playerID, unityInstanceID, ticksTimeoutToSync, state, playingTeam, nickname, lastFootInputSyncTick, position, velocity, rotation, jumpDelayTime, isGrounded, cameraPosition, cameraRotation, cameraOffsetZ, nsLastLocalPlayerSyncTime, RTT, askSendTime);
     }
 
     @Override
@@ -164,7 +164,7 @@ public class JailPlayer {
                 ", state=" + state +
                 ", playingTeam=" + playingTeam +
                 ", nickname='" + nickname + '\'' +
-                ", localInputSyncTick=" + localInputSyncTick +
+                ", localInputSyncTick=" + lastFootInputSyncTick +
                 ", position=" + position +
                 ", velocity=" + velocity +
                 ", rotation=" + rotation +
