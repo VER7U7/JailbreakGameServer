@@ -126,7 +126,7 @@ JailbreakServer/
 ## 📡 Client Integration
 
 The client (Unity game) connects to the Java server via `host:5000` (Can be changed).  
-Client repository: [soon]  
+Client repository: [JailbreakGameClient](https://github.com/VER7U7/JailbreakGameClient)  
 
 ---
 
